@@ -1,0 +1,28 @@
+<div class="placements-list">
+  <%= form.fields_for :warehouse_placements do |builder| %>
+    <%= render 'listings/form_new_placement', f: builder %>
+  <% end if form.object.warehouse_placements.any? %>
+</div>
+
+<a href="#" class="btn btn-medium add-placement">Add Placement</a>
+
+<script>
+  $('.placements-list').on('change', '[id=warehouse_id]', function () {
+    var parent = $(this).parents('.item-placement');
+    parent.find('.warehouse-pins, .quantity').hide().val('');
+    parent.find('.warehouse-pins select').attr('disabled', 'disabled');
+    if (parent.find('.warehouse-pins[data-warehouse=' + ($(this).val() || '-1') + ']').show().find('select').removeAttr('disabled').length == 1)
+      parent.find('.quantity').show();
+  });
+
+  $('.add-placement').click(function () {
+    $('.placements-list').append(Handlebars.compile($('#new-warehouse-placement-template').html())({uid: new Date().getTime()}));
+    return false;
+  })
+</script>
+
+<script type="text/x-mustache-template" id="new-warehouse-placement-template">
+  <%= form.fields_for :warehouse_placements, form.object.warehouse_placements.build, :child_index => "{{uid}}" do |builder| %>
+    <%= render 'listings/form_new_placement', f: builder %>
+  <% end %>
+</script>

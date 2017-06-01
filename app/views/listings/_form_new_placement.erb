@@ -1,0 +1,15 @@
+<div class="item-placement">
+  <% warehouses = (current_user.warehouses + [f.object.warehouse]).uniq.compact.sort_by(&:title) %>
+  <%= wrap_select select_tag(:warehouse_id, options_for_select(warehouses.map { |w| [w.title, w.id] }, f.object.warehouse.try(:id)), { :prompt => 'Warehouse...', :required => true }), 170 %>
+  <% warehouses.each { |w| %>
+    <%= wrap_select f.select(:warehouse_pin_id, w.warehouse_pins.order(:title).map { |p| [p.title, p.id] }, { :prompt => 'Location...' }, :required => true, :disabled => f.object.warehouse != w ), { :class => 'warehouse-pins', :required => true, 'data-warehouse' => w.id, :style => "width: 170px; #{"display: none;" unless f.object.warehouse == w}" } %>
+  <% } %>
+  <%= f.number_field :quantity, :placeholder => 'Qty.', :required => true, :class => 'quantity', :style => "width: 80px; #{"display: none;" unless f.object.warehouse}" %>
+
+  <% if f.object.new_record? %>
+    <a href="#" class="remove" onclick="$(this).parent().remove(); return false;">x</a>
+  <% else %>
+    <%= f.hidden_field :_destroy %>
+    <a href="#" class="remove" onclick="$(this).parent().hide().find('input[type=hidden]').val(1); return false;">x</a>
+  <% end %>
+</div>

@@ -1,0 +1,26 @@
+// Place all the styles related to the warehouse_pins controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.floor-plan-pin-box {
+  cursor: crosshair;
+  position: relative;
+  background: black;
+  .pin {
+    background: url(https://cdn0.iconfinder.com/data/icons/gpsmapicons/pins/red-pin.png);
+    background-size: cover;
+    width: 32px;
+    height: 32px;
+    position: absolute;
+  }
+  img {
+    opacity: 0.7;
+    margin: 0px 0px;
+    display: block;
+  }
+  &:hover {
+    img {
+      opacity: 1;
+    }
+  }
+}

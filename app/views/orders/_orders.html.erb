@@ -1,0 +1,77 @@
+<%= will_paginate orders, :class => 'pagination ajax-filter-pagination' %>
+
+<table class="strip-table orders-list sortable">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <% if admin_zone? %>
+      <th>Seller</th>
+    <% end %>
+    <th>Store</th>
+    <th style="width: 90px">Order ID</th>
+    <th style="width: 90px">Date</th>
+    <th>Item</th>
+    <th style="width: 100px">Order Total</th>
+    <% if !admin_zone? %>
+      <th>Buyer</th>
+    <% end %>
+    <th style="width: 120px">Status</th>
+  </tr>
+  </thead>
+  <% if orders.any? %>
+    <% orders.each { |order| %>
+      <tr>
+        <td><%= order.id %></td>
+        <% if admin_zone? %>
+          <td><%= link_to order.account.user.full_name, admin_users_path + "#u#{order.account.user.id}" %></td>
+        <% end %>
+        <td><%= order.account.title %></td>
+        <td><%= link_to order.uid.truncate(12), '#', :class => 'order-details-trigger' %></td>
+        <td><%= l order.create_timestamp, :format => :short %></td>
+        <td>
+          <% resolved_listings = order.order_items.select {|oi| oi.has_listing? } %>
+          <% if resolved_listings.length == 1 %>
+            <%= link_to resolved_listings.first.listing.title.truncate(25), listing_path(resolved_listings.first.listing), :target => '_blank' %>
+          <% else %>
+            <span class="grey"><%= pluralize(order.order_items.length, 'item') %></span>
+          <% end %>
+        </td>
+        <td>
+          <% if order.grand_total %>
+            <%= number_to_currency order.grand_total %>
+          <% else %>
+            <span class="grey">unspecified</span>
+          <% end %>
+        </td>
+        <% if !admin_zone? %>
+          <td>
+            <% if order.buyer %>
+              <%= link_to order.buyer.try(:name).try(:truncate, 18), '#', :class => 'order-details-trigger' %>
+            <% else %>
+              <span class="grey">unspecified</span>
+            <% end %>
+          </td>
+        <% end %>
+        <td style="color: <%= [:cancelled, :rejected].include?(order.status) ? 'lightcoral' : (order.shipped? ? 'lightgreen' : 'orange') %>"><%= order.status.to_s.humanize %></td>
+      </tr>
+      <tr class="order-details" style="display: none">
+        <td colspan="8">
+          <%= render :partial => 'orders/details', :locals => { :order => order } %>
+        </td>
+      </tr>
+      <tr></tr>
+    <% } %>
+  <% else %>
+    <tr>
+      <td colspan="7">
+        <center>No orders here yet</center>
+      </td>
+    </tr>
+  <% end %>
+</table>
+<script>
+  sorttable.makeSortable($('.orders-list')[0]);
+  $('')
+</script>
+
+<%= will_paginate orders, :class => 'pagination ajax-filter-pagination' %>

@@ -1,0 +1,8 @@
+<% @page_title = "System Notifications" %>
+<% @body_classes << "admin-settings" %>
+
+<h1><%= @page_title %></h1>
+
+<div class="light-container">
+  <%= render :partial => 'admin/admin/notifications', :locals => { :notifications => Notification.system } %>
+</div>

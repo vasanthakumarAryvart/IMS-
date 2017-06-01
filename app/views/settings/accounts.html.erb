@@ -1,0 +1,24 @@
+<% @page_title = "Connected Accounts" %>
+<% @body_classes << "settings" %>
+
+<h1>Connected Accounts</h1>
+
+<div class="light-container connected-accounts">
+  <% current_user.accounts.each { |account| %>
+      <div class="account-item">
+        <% if account.integration.logged_in? %>
+            <%= link_to 'Disconnect', disconnect_account_path(account), :class => 'btn btn-primary btn-medium float-right' %>
+        <% else %>
+            <%= link_to 'Connect', connect_integration_path(account), :class => 'btn btn-primary btn-medium float-right' %>
+        <% end unless (account.integration.logged_in? rescue :not_implemented) == :not_implemented %>
+        <div class="caption">
+          <span><%= account.title %></span>
+          <%= link_to 'Manage Sale Events', '#', 'data-open-popup' => "account-sale-events-#{account.id}" %>
+          <%= link_to 'Options', '#', 'data-open-popup' => "account-options-#{account.id}" %>
+        </div>
+        <%= render :partial => 'account_options', :locals => { :account => account } %>
+        <%= render :partial => 'account_sale_events', :locals => { :account => account } %>
+      </div>
+  <% } %>
+</div>
+

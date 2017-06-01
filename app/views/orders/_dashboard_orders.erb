@@ -1,0 +1,27 @@
+<table class="strip-table orders-list sortable">
+  <tr>
+    <th>Order ID</th>
+    <th>Date</th>
+    <th>Total $</th>
+    <th>Status</th>
+  </tr>
+  <% if orders.any? %>
+    <% orders.each { |order| %>
+      <tr>
+        <td>
+          <%= order.account.title %><br/>
+          <%= order.uid %>
+        </td>
+        <td><%= l order.create_timestamp, :format => :short %></td>
+        <td><%= number_to_currency order.grand_total %></td>
+        <td style="color: <%= [:cancelled, :rejected].include?(order.status) ? 'lightcoral' : (order.shipped? ? 'lightgreen' : 'orange') %>"><%= order.status.to_s.humanize %></td>
+      </tr>
+    <% } %>
+  <% else %>
+    <tr>
+      <td colspan="5">
+        <center>You have no orders</center>
+      </td>
+    </tr>
+  <% end %>
+</table>

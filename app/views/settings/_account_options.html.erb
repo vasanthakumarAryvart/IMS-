@@ -1,0 +1,23 @@
+<div class="light-container" style="display: none; width: 475px" data-popup-box="account-options-<%= account.id %>">
+  <h1>Marketplace Options</h1>
+  <%= form_for account do |f| %>
+      <div class="input-form">
+        <div class="row">
+          <%= f.label :auto_renew %>
+          <div class="field">
+            <%= wrap_select f.select :auto_renew, Account::AUTO_RENEW_OPTIONS.map { |o| [o.capitalize, o] }, :prompt => 'Choose...' %>
+          </div>
+        </div>
+        <div class="row">
+          <%= f.label :relisting_pricing %>
+          <div class="field">
+            <%= variable_pricing_box(:account, :relisting_pricing, account.relisting_pricing) %>
+          </div>
+        </div>
+        <div class="row actions">
+          <%= f.submit 'Save', :class => 'btn btn-primary' %>
+          <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+        </div>
+      </div>
+  <% end %>
+</div>

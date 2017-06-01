@@ -1,0 +1,49 @@
+<%= will_paginate @items, :class => 'pagination ajax-filter-pagination' %>
+
+<table class="strip-table centered-table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th class="text-left">Make & Model</th>
+    <th>Category</th>
+    <th>Status</th>
+    <th>Location</th>
+    <th>ACQ</th>
+    <th>PS %</th>
+    <th>Qty</th>
+    <th>Listing</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% if @items.any? %>
+    <% @items.each { |item| %>
+      <tr>
+        <td>#<%= item.id %></td>
+        <td class="text-left"><%= item.title %></td>
+        <td><%= item.item_category.title %></td>
+        <td><%= item.status %></td>
+        <td><%= item.location %></td>
+        <td><%= number_to_currency item.acquisition_cost %></td>
+        <td><%= item.cached_profit_share_percent %></td>
+        <td><%= item.quantity %></td>
+        <td class="actions">
+          <% if listing = item.listings.where(:user_id => current_user.id).first %>
+            <%= link_to 'view', listing_path(listing), :class => 'green' %>
+          <% else %>
+            <%= link_to 'add', new_listing_path(:inventory_item_id => item.id), :class => 'red' %>
+          <% end %>
+        </td>
+      </tr>
+    <% } %>
+
+  <% else %>
+    <tr>
+      <td colspan="9">
+        <center>No inventory items</center>
+      </td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+
+<%= will_paginate @items, :class => 'pagination ajax-filter-pagination' %>

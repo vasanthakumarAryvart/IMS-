@@ -1,0 +1,55 @@
+<%= form_for @warehouse_pin, :url => @warehouse_pin.new_record? ? warehouse_pins_path(@warehouse) : warehouse_pin_path(@warehouse, @warehouse_pin) do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :title %>
+      <div class="field">
+        <%= f.text_field :title, :placeholder => 'Pin Title', :required => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :location %>
+      <div class="field">
+        <%= f.text_field :location, :placeholder => 'Location in the warehouse', :required => true %>
+      </div>
+    </div>
+    <% if @warehouse_pin.warehouse.floor_plan.exists? %>
+      <div class="row">
+        <%= f.label :location_on_plan %>
+        <div class="field">
+          <div class="floor-plan-pin-box">
+            <%= hidden_field_tag "warehouse_pin[location_on_plan][x]", (@warehouse_pin.location_on_plan[:x] if @warehouse_pin.location_on_plan) %>
+            <%= hidden_field_tag "warehouse_pin[location_on_plan][y]", (@warehouse_pin.location_on_plan[:y] if @warehouse_pin.location_on_plan) %>
+            <%= hidden_field_tag "warehouse_pin[location_on_plan][width]", (@warehouse_pin.location_on_plan[:width] if @warehouse_pin.location_on_plan) %>
+            <%= image_tag @warehouse_pin.warehouse.floor_plan.url, :width => '100%' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  $('.floor-plan-pin-box img').click(function (event) {
+    $('.floor-plan-pin-box .pin').remove();
+    $('#warehouse_pin_location_on_plan_x').val(event.offsetX);
+    $('#warehouse_pin_location_on_plan_y').val(event.offsetY);
+    $('#warehouse_pin_location_on_plan_width').val($(this).width());
+    putPin(event.offsetX, event.offsetY)
+  });
+
+  function putPin(x, y) {
+    $('.floor-plan-pin-box').append('<div class="pin"></div>').find('.pin').css({
+      left: x - 32 / 2,
+      top: y - 32
+    });
+  }
+
+  <% if @warehouse_pin.location_on_plan %>
+  var width = $('.floor-plan-pin-box').width();
+  putPin(width * <%= 1.0 * @warehouse_pin.location_on_plan[:x] / @warehouse_pin.location_on_plan[:width] %>, width * <%= 1.0 * @warehouse_pin.location_on_plan[:y] / @warehouse_pin.location_on_plan[:width] %>)
+  <% end %>
+</script>

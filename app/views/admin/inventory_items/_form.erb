@@ -1,0 +1,108 @@
+<%= form_for [:admin, @item] do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :make %>
+      <div class="field">
+        <%= f.text_field :make, :placeholder => 'e.g. Apple', :required => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :model %>
+      <div class="field">
+        <%= f.text_field :model, :placeholder => 'e.g. iPhone 6', :required => false %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :icc, 'ICN' %>
+      <div class="field">
+        <%= f.text_field :icc, :placeholder => 'Inventory Control #', :required => false %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :serial %>
+      <div class="field">
+        <%= f.text_field :serial, :placeholder => 'Serial #', :required => false %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :item_category_id, 'Item Category' %>
+      <div class="field">
+        <%= wrap_select f.select :item_category_id, categories_options_for_select(ItemCategory.top_level_categories, @item.item_category_id), :required => true, :prompt => 'Choose...' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :item_source_id, 'Item Source' %>
+      <div class="field">
+        <%= wrap_select f.select :item_source_id, ItemSource.all.map { |s| [s.name, s.id] }, :required => false, :prompt => 'None' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :status %>
+      <div class="field">
+        <%= wrap_select f.select :status, InventoryItem::STATUSES, :required => true, :prompt => 'Choose...' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :location %>
+      <div class="field">
+        <%= wrap_select f.select :location, InventoryItem::LOCATIONS, :required => false, :prompt => 'Undefined' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :acquisition_cost %>
+      <div class="field">
+        <%= f.number_field :acquisition_cost, :required => false, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+        USD
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :cached_profit_share_percent, 'Profit Share' %>
+      <div class="field">
+        <%= f.number_field :cached_profit_share_percent, :required => false, :placeholder => '0', :min => 0 %> %
+        <div class="grey hint">empty defaults to chosen source profit share</div>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :notes %>
+      <div class="field">
+        <%= f.text_area :notes, :placeholder => 'Item Notes', :required => false, :rows => 2 %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :placements %>
+      <div class="field">
+        <%= render :partial => 'listings/form_placements', :locals => { :form => f} %>
+      </div>
+    </div>
+
+    <div class="row">
+      <%= f.label :details %>
+      <div class="field">
+        <div class="string-list-input smaller">
+          <div class="string-list-items">
+            <% @item.details.each { |k, v| %>
+              <div>
+                <%= text_field_tag "inventory_item[details][#{k}][name]", v[:name], :placeholder => 'Name' %>
+                <%= text_field_tag "inventory_item[details][#{k}][value]", v[:value], :placeholder => 'Value' %>
+                <a href="#" class="red remove">X</a>
+              </div>
+            <% } %>
+          </div>
+          <a href="#" class="add-item">Add Detail Field</a>
+          <script type="text/x-handlebars-template" class="item-template">
+            <div>
+              <%= text_field_tag "inventory_item[details][{{rnd}}][name]", '', :placeholder => 'Name' %>
+              <%= text_field_tag "inventory_item[details][{{rnd}}][value]", '', :placeholder => 'Value' %>
+              <a href="#" class="red remove">X</a>
+            </div>
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,36 @@
+<% @page_title = "Manage Categories" %>
+<% @body_classes << "admin-categories" %>
+
+<h1>
+  <%= @page_title %>
+  <%= link_to 'Add Root Category', '#', :class => 'btn btn-primary btn-medium float-right', 'data-popup-url' => new_admin_item_category_path %>
+</h1>
+
+<div class="light-container">
+  <table class="strip-table categories-list">
+    <thead>
+    <tr>
+      <th class="text-left">
+        <div class="expand-category"></div>
+        Title
+      </th>
+      <th style="width: 100px">Custom Fields</th>
+      <th style="width: 100px">Listings</th>
+      <% Marketplace.with_api.each { |marketplace| %>
+        <th><%= marketplace.name %></th>
+      <% } %>
+    </tr>
+    </thead>
+    <tbody>
+    <% if @categories.any? %>
+      <%= render :partial => 'category_item', :collection => @categories %>
+    <% else %>
+      <tr>
+        <td colspan="<%= 3 + Marketplace.with_api.count %>">
+          <center>No categories</center>
+        </td>
+      </tr>
+    <% end %>
+    </body>
+  </table>
+</div>

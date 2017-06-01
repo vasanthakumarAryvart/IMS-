@@ -1,0 +1,118 @@
+<div class="current-image"></div>
+<div class="image-list">
+  <% f.object.images.each { |image| %>
+    <div class="image" style="background-image: url(<%= image.image.url %>)" data-uid="<%= image.id %>">
+      <i class="fa fa-close remove"></i>
+    </div>
+  <% } %>
+</div>
+<input type="file" accept="image/png,image/jpeg" id="choose-images" multiple style="display: none"/>
+<div class="inputs"></div>
+
+<%= render 'listings/form_image_editor' %>
+
+<script>
+  $('.images')
+      .on('click', '.upload-btn, .image-list .placeholder', function () {
+        $('input#choose-images').click();
+        return false;
+      })
+      .on('click', '.image-list .image:not(.new)', function (e) {
+        if (e.target == e.currentTarget)
+          selectImage(this);
+      })
+      .on('click', '.image-list .image:not(.new) .remove', function () {
+        var image = $(this).parents('.image');
+        if (image.hasClass('active'))
+          selectImage($('.image-list .image:not(.new):not(.active)').first());
+        image.remove();
+        recreatePlaceholders();
+      })
+      .on('click', '.current-image .remove', function () {
+        $('.images .image-list .image.active .remove').click();
+        return false;
+      });
+
+  $('input#choose-images').change(function () {
+    if (this.files)
+      $(this.files).each(function (i, file) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          addImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      })
+  });
+
+  // handle files drop
+  $('.images .current-image').on('dragover', function (e) {
+    $(this).addClass('drag-over');
+    e.preventDefault();
+  }).on('dragleave', function () {
+    $(this).removeClass('drag-over');
+  }).on('drop', function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    $(this).removeClass('drag-over');
+
+    var files = e.originalEvent.target.files || e.originalEvent.dataTransfer.files;
+    $(files || []).each(function (i, file) {
+      if (['image/png', 'image/jpeg'].indexOf(file.type) >= 0) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          addImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    return false;
+  });
+
+
+  // functions
+
+  function recreatePlaceholders() {
+    $('.image-list .image.new').remove();
+    var images = $('.image-list .image:not(.new)');
+    for (var i = 0; i < 3 - images.length; i++) {
+      $('.image-list').append('<div class="image new"><div class="placeholder">+</div></div>');
+    }
+    $('.image-list').append('<div class="image new"><div class="placeholder">+</div></div>');
+  }
+
+  function clearCurrentImage() {
+    $('.images .current-image').html('<div class="intro"><p>Drop images here</p><p>or</p><a href="#" class="upload-btn">Upload</a></div>');
+  }
+
+  function addImage(dataUrl) {
+    $('.image-list').append('<div class="image changed" style="background-image: url(' + dataUrl + ');" data-uid="' + new Date().getTime() + '"><i class="fa fa-close remove"></i></div>');
+    recreatePlaceholders();
+
+    selectImage($('.image-list .image:not(.new)').last());
+    dumpImageInputs();
+  }
+
+  function selectImage(image) {
+    if ($(image)[0]) {
+      $('.image-list .image').removeClass('active');
+      $(image).addClass('active');
+      $('.images .current-image').html('<img/><div class="buttons-overlay"><a href="#" class="btn btn-medium edit" data-open-popup="edit-image-popup">Edit</a><br/><a href="#" class="btn btn-medium remove">Remove</a></div>').find('img').attr('src', $(image).css('background-image').slice(5, -2));
+    }
+    else
+      clearCurrentImage();
+  }
+
+  function dumpImageInputs() {
+    var inputs = $('.images .inputs').html('');
+    $('.image-list .image:not(.new)').each(function (i, el) {
+      inputs.append('<input type="hidden" name="images[' + $(el).data('uid') + ']"/>').find('input').last().val($(el).css('background-image').slice(5, -2));
+    })
+  }
+
+  dumpImageInputs();
+  recreatePlaceholders();
+  selectImage($('.image-list .image:not(.new)').first());
+
+  $('.image-list').sortable({items: '.image:not(.new)', stop: dumpImageInputs});
+</script>

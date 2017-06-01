@@ -1,0 +1,12 @@
+body.admin-categories {
+  .expand-category {
+    width: 10px;
+    text-align: center;
+    display: inline-block;
+    padding: 0px 5px;
+    cursor: pointer;
+    &:hover {
+      color: white;
+    }
+  }
+}

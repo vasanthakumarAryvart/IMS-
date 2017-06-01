@@ -1,0 +1,80 @@
+<% if @filter.blank? %>
+  <% @page_title = "Listings" %>
+  <% @body_classes << "listings" %>
+
+  <h1>
+    <%= @page_title %>
+    <%= link_to 'New Listing', '#', :class => 'btn btn-primary float-right', 'data-open-popup' => "new-listing" %>
+  </h1>
+
+  <div class="light-container">
+    <form id="listings-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= listings_path %>">
+      <%= hidden_field_tag 'filter[ajax]', true %>
+      Filters
+      <%= wrap_select select_tag 'filter[marketplace]', options_for_select(Marketplace.all.map(&:name), @filter[:marketplace]), :prompt => 'All Marketplaces' %>
+      <%= wrap_select select_tag 'filter[category]', categories_options_for_select(ItemCategory.top_level_categories, @filter[:category]), :prompt => 'All Categories' %>
+      <%= wrap_select select_tag 'filter[sort]', options_for_select(@filter_sort_options, @filter[:sort]), :prompt => 'Sort Order' %>
+      <%= wrap_select select_tag 'filter[item_type]', options_for_select(@filter_item_types, @filter[:sort]), :prompt => 'Item Types' %>
+      <%= text_field_tag 'filter[term]', @filter[:term], :placeholder => 'Search', :style => 'width: 170px' %>
+    </form>
+  </div>
+
+  <div id="filtered-content"></div>
+
+  <div class="light-container" style="display: none; width: 350px" data-popup-box="new-listing">
+    <h1>New Listing</h1>
+
+    <p>Please choose a category from the list below:</p>
+
+    <div class="new-listing-categories">
+      <% recursive_sorted_categories_list.each { |item| %>
+        <div style="<%= "padding-left: #{20 * item[:indent]}px" %>" class="<%= "top-category" if item[:indent] == 0 %>">
+          - <%= link_to item[:title], new_listing_path(:item_category_id => item[:id]) %>
+        </div>
+      <% } %>
+    </div>
+
+    <div>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% else %>
+  <div class="listings-list">
+    <% if @listings.any? %>
+      <% @listings.each { |listing| %>
+        <div class="listing">
+          <%= link_to listing_path(listing) do %>
+            <div class="image" style="<%= "background-image: url(#{listing.images.first.image.url(:preview)})" if listing.images.first.try(:image).try(:exists?) %>"></div>
+          <% end %>
+          <%= link_to listing.title.truncate(30), listing_path(listing), :class => 'title' %>
+
+          <div class="make-model">
+            <div>Category: <span><%= listing.item_category.title %></span></div>
+            Make: <span><%= listing.make || '&ndash;'.html_safe %></span>
+
+            <div class="float-right">Model: <span><%= listing.model || '&ndash;'.html_safe %></span></div>
+          </div>
+
+          <p class="description"><%= listing.description.truncate(110) %></p>
+
+          <div class="listing-pricing">
+            <% listing.account_listings.published.each { |account_listing| %>
+              <div class="price" style="padding-top: <%= account_listing.discount? ? 0 : 15 %>px;">
+                <div class="number <%= 'regular' if account_listing.discount? %>">&nbsp;<%= account_listing.price ? number_to_currency(account_listing.price) : "<i class='fa fa-refresh infinite-spin'></i>".html_safe %>&nbsp;</div>
+                <% if account_listing.discount? %>
+                  <div class="number"><%= number_to_currency account_listing.discount_price %></div>
+                <% end %>
+
+                <div>
+                  <%= link_to image_tag(account_listing.account.marketplace.icon_url), account_listing.url, :target => '_blank' %>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    <% else %>
+      <p class="text-center">No listings found</p>
+    <% end %>
+  </div>
+<% end %>

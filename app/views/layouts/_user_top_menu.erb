@@ -1,0 +1,51 @@
+<div class="top-bar">
+  <div class="wide-limit">
+    <div class="logo"><%= link_to image_tag('logo.png'), :dashboard %></div>
+    <div class="main-menu">
+      <div class="menu-item <%= 'active' if @top_menu_item == :dashboard %>">
+        <%= link_to 'Dashboard', :dashboard %>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :listings %>">
+        <%= link_to 'Listings', :listings %>
+        <div class="menu-drop-down">
+          <div class="drop-down-item">
+            <%= link_to 'Browse Inventory', :inventory_listings %>
+          </div>
+        </div>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :shipping %>">
+        <%= link_to 'Shipping', :shipping %>
+        <div class="menu-drop-down">
+          <div class="drop-down-item">
+            <%= link_to 'Shipping Presets', :shipping %>
+          </div>
+          <div class="drop-down-item">
+            <%= link_to 'Warehouses', :shipping %>
+          </div>
+        </div>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :orders %>">
+        <%= link_to 'Orders', :orders %>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :reports %>">
+        <%= link_to 'Reports', '#', :class => 'no-click' %>
+        <div class="menu-drop-down">
+          <!--<div class="drop-down-item">
+            <%= link_to 'My Performance', :seller_performance_report %>
+          </div>
+          -->
+          <div class="drop-down-item">
+            <%= link_to 'Sales', :sales_report %>
+          </div>
+          <div class="drop-down-item">
+            <%= link_to 'Sold Listings', :sold_listings_report %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%= render :partial => 'layouts/account_box' %>
+
+    <div class="clearfix"></div>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<% @page_title = "Users" %>
+<% @body_classes << "admin-users" %>
+
+<h1><%= @page_title %></h1>
+
+<div class="light-container">
+  <table class="strip-table sortable centered-table">
+    <tr>
+      <th>ID</th>
+      <th>Email</th>
+      <th>Full Name</th>
+      <th>Listings</th>
+      <th>Orders</th>
+      <th>Last Login</th>
+      <th>Status</th>
+    </tr>
+    <% @users.each { |user| %>
+      <tr class="user" data-id="<%= user.id %>" id="u<%= user.id %>">
+        <td><%= user.id %></td>
+        <td class="text-left"><%= mail_to user.email %></td>
+        <td><%= user.full_name %></td>
+        <td><%= link_to user.listings.count, admin_listings_path('filter[user]' => user.id) %></td>
+        <td><%= link_to user.orders.count, admin_orders_path('filter[user]' => user.id) %></td>
+        <td><%= user.last_sign_in_at ? l(user.last_sign_in_at, :format => :short) : 'never' %></td>
+        <td>
+          <% if user == current_user %>
+            admin
+          <% else %>
+            <%
+               state = 'user'
+               state = 'admin' if user.is_admin?
+               state = 'blocked' if user.blocked?
+            %>
+            <%= wrap_select select_tag('user-state', options_for_select(%w{user admin blocked}, state), :autocomplete => 'off', 'data-url' => state_admin_user_path(user)), :class => 'small' %>
+          <% end %>
+        </td>
+      </tr>
+    <% } %>
+  </table>
+</div>
+
+<script>
+  $('[name=user-state]').change(function () {
+    $.post($(this).data('url'), { status: $(this).val() }, function () {
+      show_top_alert_message('success', 'User status changed successfully')
+    });
+  })
+</script>

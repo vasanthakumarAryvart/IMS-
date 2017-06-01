@@ -1,0 +1,27 @@
+<% unless @filter[:ajax] %>
+  <% @page_title = "Manage Inventory Items" %>
+  <% @body_classes << "" %>
+
+  <h1>
+    <%= @page_title %>
+    <%= link_to 'Add Inventory Item', '#', :class => 'btn btn-primary btn-medium float-right', 'data-popup-url' => new_admin_inventory_item_path, 'data-popup-width' => 610 %>
+  </h1>
+
+  <div class="light-container">
+    <form id="inventory-items-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= admin_inventory_items_path %>">
+      <%= hidden_field_tag 'filter[ajax]', true %>
+      Filters
+      <%= wrap_select select_tag 'filter[category]', categories_options_for_select(ItemCategory.top_level_categories, @filter[:category]), :prompt => 'All Categories' %>
+      <%= wrap_select select_tag 'filter[source]', options_for_select(ItemSource.all.map { |s| [s.name, s.id] }, @filter[:source]), :prompt => 'All Sources' %>
+      <%= wrap_select select_tag 'filter[status]', options_for_select(InventoryItem::STATUSES, @filter[:status]), :prompt => 'Any Status' %>
+      <%= wrap_select select_tag 'filter[active]', options_for_select([['Active', 1], ['Archived', 0]], @filter[:active] || 1) %>
+      <div class="float-right">
+        <%= text_field_tag 'filter[term]', @filter[:term], :placeholder => 'Search', :style => 'width: 170px' %>
+      </div>
+    </form>
+
+    <div id="filtered-content"></div>
+  </div>
+<% else %>
+  <%= render :partial => 'admin/inventory_items/items', :locals => { :orders => @items } %>
+<% end %>

@@ -1,0 +1,151 @@
+<% @page_title = "#{@category.title} - Custom Fields" %>
+<% @body_classes << "admin-categories" %>
+
+<h1>
+  <%= back_btn(admin_item_categories_path) %>
+  <%= @page_title %>
+  <%= link_to 'Add Custom Field', '#', :class => 'btn btn-primary btn-medium float-right', 'data-popup-url' => new_admin_item_category_custom_field_path(@category) %>
+</h1>
+
+<div class="light-container">
+  <table class="strip-table centered-table categories-list sortable">
+    <thead>
+    <tr>
+      <th class="text-left" style="width: 225px;">Name</th>
+      <% Marketplace.with_api.each { |marketplace| %>
+        <th><%= marketplace.name %></th>
+      <% } %>
+    </tr>
+    </thead>
+    <tbody>
+    <% if @custom_fields.any? %>
+      <% @custom_fields.each { |custom_field| %>
+        <tr data-id="<%= custom_field.id %>">
+          <td class="text-left">
+            <i class="fa fa-bars sort-trigger" title="Drag to sort fields"></i> &nbsp;
+            <span class="<%= "bold" if custom_field.required? %> <%= "italic" if custom_field.hidden? %>"><%= custom_field.name %></span>
+
+            <div class="record-actions on-parent-hover">
+              <%= link_to '#', :title => 'Edit', 'data-popup-url' => edit_admin_item_category_custom_field_path(@category, custom_field) do %>
+                <i class="fa fa-pencil"></i>
+              <% end %>
+              <%= link_to admin_item_category_custom_field_path(@category, custom_field),
+                          'data-confirm' => 'Are you sure?',
+                          :class => ('disabled' unless custom_field.can_delete?),
+                          :method => 'delete',
+                          :title => (!custom_field.can_delete? ? 'This field has some linked listings / templates. Unassign them in order to delete' : 'Delete') do %>
+                <i class="fa fa-trash"></i>
+              <% end %>
+            </div>
+          </td>
+          <% Marketplace.with_api.each { |marketplace| %>
+            <% custom_field_mapping = custom_field.custom_field_mapping_for(marketplace) %>
+            <td class="text-center">
+              <% if category_mapping = @category.marketplace_category_mapping_for(marketplace) %>
+                <% if custom_field_mapping %>
+                  <div class="record-actions on-parent-hover" style="width: 10px"></div>
+                  <%= link_to 'change', '#', :class => "green #{"bold" if custom_field_mapping.required?}", 'data-popup-url' => edit_admin_item_category_custom_field_custom_field_mapping_path(@category, custom_field, custom_field_mapping) %>
+                  <div class="record-actions on-parent-hover">
+                    <%= link_to admin_item_category_custom_field_custom_field_mapping_path(@category, custom_field, custom_field_mapping),
+                                'data-confirm' => 'Are you sure?', :method => 'delete', :title => 'Remove Mapping' do %>
+                      <i class="fa fa-trash"></i>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <%= link_to 'set', '#', :class => 'red', 'data-popup-url' => new_admin_item_category_custom_field_custom_field_mapping_path(@category, custom_field, :marketplace_category_mapping_id => category_mapping.id) %>
+                <% end %>
+              <% else %>
+                <span class="grey" title="<%= @category.title %> category does not have a marketplace category mapping for <%= marketplace.name %>. Please go back and setup mapping">disabled</span>
+              <% end %>
+            </td>
+          <% } %>
+        </tr>
+      <% } %>
+    <% else %>
+      <tr>
+        <td colspan="<%= Marketplace.with_api.count + 2 %>">
+          <center>No custom fields defined yet</center>
+        </td>
+      </tr>
+    <% end %>
+    <tr class="transparent">
+      <td class="text-left valign-top bold">
+        Required custom fields to map:
+      </td>
+      <% Marketplace.with_api.each { |marketplace| %>
+        <td class="text-center valign-top">
+          <% if @category.marketplace_category_mapping_for(marketplace) %>
+            <% missing_fields = @missing_fields_per_marketplace[marketplace][:required] %>
+            <% if missing_fields.any? %>
+              <% missing_fields.each { |field| %>
+                <div title="<%= field.to_json %>">
+                  <%= field[:name] %>
+                  <a href="#" title="Create marketplace-specific field" data-config="<%= field.to_json %>" data-marketplace="<%= marketplace.id %>" class="create-field green no-underline">+</a>
+                </div>
+              <% } %>
+            <% else %>
+              <span class="grey">all mapped</span>
+            <% end if missing_fields %>
+          <% else %>
+            <span class="grey" title="<%= @category.title %> category does not have a marketplace category mapping for <%= marketplace.name %>. Please go back and setup mapping">disabled</span>
+          <% end %>
+        </td>
+      <% } %>
+    </tr>
+    <tr class="transparent">
+      <td class="text-left valign-top bold">
+        Optional custom fields to map:
+      </td>
+      <% Marketplace.with_api.each { |marketplace| %>
+        <td class="text-center valign-top">
+          <% if @category.marketplace_category_mapping_for(marketplace) %>
+            <% missing_fields = @missing_fields_per_marketplace[marketplace][:optional] %>
+            <% if missing_fields.any? %>
+              <% missing_fields.each { |field| %>
+                <div title="<%= field.to_json %>">
+                  <%= field[:name] %>
+                  <a href="#" title="Create marketplace-specific field" data-config="<%= field.to_json %>" data-marketplace="<%= marketplace.id %>" class="create-field green no-underline">+</a>
+                </div>
+              <% } %>
+            <% else %>
+              <span class="grey">all mapped</span>
+            <% end if missing_fields %>
+          <% else %>
+            <span class="grey" title="<%= @category.title %> category does not have a marketplace category mapping for <%= marketplace.name %>. Please go back and setup mapping">disabled</span>
+          <% end %>
+        </td>
+      <% } %>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  var fixHelper = function (e, ui) {
+    ui.children().each(function () {
+      $(this).width($(this).width());
+    });
+    return ui;
+  };
+  $('.categories-list tbody').sortable({
+    helper: fixHelper,
+    handle: '.sort-trigger',
+    axis: 'y',
+    stop: function () {
+      $.post('<%= reorder_admin_item_category_custom_fields_path(@category) %>', {
+        ids: $('.categories-list tr[data-id]').map(function (i, el) {
+          return $(el).data('id')
+        }).toArray()
+      })
+    }
+  }).disableSelection();
+
+  $('.create-field').click(function () {
+    $.post('<%= admin_item_category_custom_fields_path(@category) %>', { mapping_field_config: JSON.stringify($(this).data('config')), marketplace_id: $(this).data('marketplace') }, function () {
+      window.location.reload();
+    }).error(function () {
+      alert('There was an error creating the custom field')
+    });
+    return false;
+  })
+</script>

@@ -1,0 +1,29 @@
+<% @page_title = "Admin Dashboard" %>
+<% @body_classes << "dashboard admin-dashboard" %>
+
+<table class="dashboard-layout">
+  <tr>
+    <td class="dashboard-container">
+      <h2 class="text-left">
+        System Notifications
+        <%= link_to 'View All Notifications', admin_notifications_path, :class => 'float-right' %>
+      </h2>
+      <%= render :partial => 'admin/admin/notifications', :locals => { :notifications => Notification.system, :truncate_after => 50 } %>
+    </td>
+    <td class="dashboard-container">
+      <h2 class="text-left">
+        New Users
+        <%= link_to 'View All Users', admin_users_path, :class => 'float-right' %>
+      </h2>
+      <%= render :partial => 'admin/users/dashboard_users', :locals => { :users => User.order('id desc').limit(4) } %>
+    </td>
+  </tr>
+  <tr>
+    <td class="dashboard-container">
+      <%= render :partial => 'dashboard/sales_overview', :locals => { :recent_orders => @recent_orders } %>
+    </td>
+    <td class="dashboard-container">
+      <%= render :partial => 'dashboard/most_selling_items', :locals => { :recent_orders => @recent_orders } %>
+    </td>
+  </tr>
+</table>

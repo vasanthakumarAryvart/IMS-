@@ -1,0 +1,26 @@
+<%= form_for @shipping_preset do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :title %>
+      <div class="field">
+        <%= f.text_field :title, :placeholder => 'Shipping Preset Title', :required => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :countries %>
+      <div class="field">
+        <%= f.text_field :countries, :placeholder => 'Comma-separated list (USA, Canada etc.)' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :price %>
+      <div class="field">
+        <%= f.number_field :price, :placeholder => '$0.00', :required => true, :min => 0, :step => 0.01 %> USD
+      </div>
+    </div>
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>

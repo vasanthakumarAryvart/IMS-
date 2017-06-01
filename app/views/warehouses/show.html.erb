@@ -1,0 +1,58 @@
+<% @page_title = "#{@warehouse.title}" %>
+<% @body_classes << "shipping" %>
+
+<h1>
+  <%= back_btn(shipping_path) %>
+  <%= @warehouse.title %>
+  <%= link_to 'Add Pin', '#', :class => 'btn btn-primary btn-medium float-right', 'data-popup-url' => new_warehouse_pin_path(@warehouse) %>
+</h1>
+
+<div class="light-container">
+  <table class="strip-table sortable">
+    <tr>
+      <th style="">Pin Name</th>
+      <th style="">Location</th>
+      <th>Listings on Pin</th>
+    </tr>
+    <% if @warehouse.warehouse_pins.any? %>
+      <% @warehouse.warehouse_pins.each { |pin| %>
+        <tr>
+          <td>
+            <%= pin.title %>
+            <div class="record-actions on-parent-hover">
+              <%= link_to '#', :title => 'Edit', 'data-popup-url' => edit_warehouse_pin_path(@warehouse, pin) do %>
+                <i class="fa fa-pencil"></i>
+              <% end %>
+              <%= link_to warehouse_pin_path(@warehouse, pin),
+                          'data-confirm' => 'Are you sure?',
+                          :class => ('disabled' unless pin.can_delete?),
+                          :method => 'delete',
+                          :title => (!pin.can_delete? ? 'This pin has some linked listings. Unassign them in order to delete' : 'Delete') do %>
+                <i class="fa fa-trash"></i>
+              <% end %>
+            </div>
+          </td>
+          <td class="text-center"><%= pin.location %></td>
+          <td class="text-center" sorttable_customkey="<%= pin.listing_placements.length %>">
+            <% if pin.listing_placements.empty? %>
+              <span class="grey">none</span>
+            <% else %>
+              <% pin.listing_placements.each { |placement| %>
+                <div>
+                  <%= link_to placement.listing.title, listing_path(placement.listing) %>
+                  - <%= placement.quantity %> left
+                </div>
+              <% } %>
+            <% end %>
+          </td>
+        </tr>
+      <% } %>
+    <% else %>
+      <tr>
+        <td colspan="8">
+          <center>You have no orders</center>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+</div>

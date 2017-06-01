@@ -1,0 +1,62 @@
+<% if @filter.empty? %>
+  <% @page_title = "Listings" %>
+  <% @body_classes << "listings" %>
+
+  <h1>
+    <%= @page_title %>
+  </h1>
+
+  <div class="light-container">
+    <form id="listings-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= admin_listings_path %>">
+      <%= hidden_field_tag 'filter[on]', true %>
+      Filters
+      <%= wrap_select select_tag 'filter[user]', options_for_select(User.order('id ASC').map { |u| ["#{u.full_name} [##{u.id}]", u.id] }, @filter[:user]), :prompt => 'All Users' %>
+      <%= wrap_select select_tag 'filter[marketplace]', options_for_select(Marketplace.all.map(&:name), @filter[:marketplace]), :prompt => 'All Marketplaces' %>
+      <%= wrap_select select_tag 'filter[category]', categories_options_for_select(ItemCategory.top_level_categories, @filter[:category]), :prompt => 'All Categories' %>
+      <%= wrap_select select_tag 'filter[item_type]', options_for_select(@filter_item_types, @filter[:sort]), :prompt => 'Item Types' %>
+      <%= text_field_tag 'filter[term]', @filter[:term], :placeholder => 'Search', :style => 'width: 170px' %>
+    </form>
+
+    <div id="filtered-content"></div>
+  </div>
+<% else %>
+  <table class="strip-table centered-table sortable">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Seller</th>
+      <th>Category</th>
+      <th>Title</th>
+      <th>Make</th>
+      <% Marketplace.with_api.each { |m| %>
+        <th><%= m.name %></th>
+      <% } %>
+      <th style="width: 90px">Created At</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% if @listings.any? %>
+      <% @listings.each { |listing| %>
+        <tr>
+          <td><%= listing.id %></td>
+          <td><%= link_to listing.user.full_name, admin_users_path + "#u#{listing.user.id}" %></td>
+          <td><%= listing.item_category.title %></td>
+          <td><%= link_to listing.title, listing_path(listing) %></td>
+          <td><%= listing.make %></td>
+          <% Marketplace.with_api.each { |m| %>
+            <% account_listing = listing.account_listing_for_marketplace(m) %>
+            <td><%= ((number_to_currency account_listing.price if account_listing.active?) rescue false) || '&ndash;'.html_safe %></td>
+          <% } %>
+          <td><%= l listing.created_at, :format => :short %></td>
+        </tr>
+      <% } %>
+    <% else %>
+      <tr>
+        <td colspan="2">
+          <center>No listings here yet</center>
+        </td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% end %>

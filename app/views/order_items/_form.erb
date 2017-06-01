@@ -1,0 +1,54 @@
+<%= form_for [@order, @item] do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :inventory_item_id, 'Inventory Item' %>
+      <div class="field">
+        <%= f.hidden_field :inventory_item_id, :required => true %>
+        <%= text_field_tag 'inventory_item', @item.inventory_item.try(:title), :placeholder => 'Start typing inventory item name / ID' %>
+        <script>
+          $(document).ready(function () {
+            $('#inventory_item').autocomplete({
+              source: '<%= inventory_search_order_order_items_path(@order, @item) %>',
+              minLength: 3,
+              select: function( event, ui ) {
+                $('#order_item_inventory_item_id').val(ui.item.value);
+                $('#inventory_item').val(ui.item.label);
+                return false;
+              }
+            })
+          })
+        </script>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :item_price %>
+      <div class="field">
+        <%= f.number_field :item_price, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :quantity %>
+      <div class="field">
+        <%= f.number_field :quantity, :placeholder => 'Qty.', :min => 1 %>
+      </div>
+    </div>
+
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  $('#new_order_item').submit(function() {
+    var form = $(this);
+    $.post($(this)[0].action, $(this).serialize()).success(function(data) {
+      $('.order-details:visible td:first').html(data);
+      form.parents('.popup-box-overlay').remove();
+    }).fail(function(data) {
+      alert(data.responseText);
+    });
+    return false;
+  })
+</script>

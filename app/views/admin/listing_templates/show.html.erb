@@ -1,0 +1,76 @@
+<% @page_title = @listing_template.title %>
+<% @body_classes << "listings" %>
+
+<h1>
+  <%= back_btn(admin_listing_templates_path) %>
+  <%= @page_title %>
+  <%= link_to 'Edit', edit_admin_listing_template_path(@listing_template), :class => 'btn btn-primary float-right' %>
+  <%= link_to 'Remove', admin_listing_template_path(@listing_template), :method => :delete, :class => 'btn btn-primary float-right', 'data-confirm' => 'Are you sure?' %>
+</h1>
+
+<div class="listing-view">
+  <div class="left-column">
+    <div class="listing-images">
+      <div class="current-image"><%= image_tag @listing_template.images.first.try(:image, :preview) %></div>
+      <div class="images-list">
+        <% @listing_template.images.each { |image| %>
+          <div class="image" style="background-image: url(<%= image.image(:preview) %>);" data-url="<%= image.image(:preview) %>"></div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="status-details">
+      <div>Created At <span class="white float-right"><%= l @listing_template.created_at, :format => :long %></span></div>
+      <div>Updated At <span class="white float-right"><%= l @listing_template.updated_at, :format => :long %></span></div>
+      <div>Listings <span class="white float-right"><%= @listing_template.listings.count %></span></div>
+    </div>
+
+    <% if @listing_template.inventory_item %>
+      <%= render :partial => 'admin/listing_templates/inventory_item', :locals => { :item => @listing_template.inventory_item } %>
+    <% end %>
+  </div>
+
+  <div class="right-column">
+    <h3 class="white" style="margin-top: 0px;">Listing Description</h3>
+
+    <p>
+      <%= simple_format @listing_template.description %>
+    </p>
+
+    <h3 class="white">Listing Details</h3>
+
+    <div class="light-container">
+      <div class="listing-details">
+        <% @listing_template.data_fields.group_by(&:marketplace).each { |marketplace, fields| %>
+          <div class="white">
+            <%= marketplace.try(:name) || "Generic Fields" %>
+          </div>
+          <% fields.each { |field| %>
+            <% next if field.custom_field.title_field? %>
+            <% next if field.custom_field.description_field? %>
+            <div class="field">
+              <span><%= field.custom_field.name %></span>
+
+              <div class="value">
+                <%= field.value.is_a?(Array) ? field.value.join(', ') : field.value %>
+              </div>
+
+              <div class="clearfix"></div>
+            </div>
+          <% } %>
+          <br/>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="clearfix"></div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    $('.listing-images .images-list .image').click(function () {
+      $('.listing-images .current-image img').attr('src', $(this).data('url'));
+    });
+  });
+</script>

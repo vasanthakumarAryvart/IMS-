@@ -1,0 +1,29 @@
+<% @page_title = "Dashboard" %>
+<% @body_classes << "dashboard" %>
+
+<table class="dashboard-layout">
+  <tr>
+    <td class="dashboard-container">
+      <h2 class="text-left">
+        Notifications
+        <%= link_to 'View All Notifications', notifications_path, :class => 'float-right' %>
+      </h2>
+      <%= render :partial => 'settings/notifications', :locals => { :notifications => current_user.notifications, :truncate_after => 30 } %>
+    </td>
+    <td class="dashboard-container">
+      <h2 class="text-left">
+        Orders
+        <%= link_to 'View All Orders', orders_path, :class => 'float-right' %>
+      </h2>
+      <%= render :partial => 'orders/dashboard_orders', :locals => { :orders => @recent_orders.reverse[0..3] } %>
+    </td>
+  </tr>
+  <tr>
+    <td class="dashboard-container">
+      <%= render :partial => 'dashboard/sales_overview', :locals => { :recent_orders => @recent_orders } %>
+    </td>
+    <td class="dashboard-container">
+      <%= render :partial => 'dashboard/most_selling_items', :locals => { :recent_orders => @recent_orders } %>
+    </td>
+  </tr>
+</table>

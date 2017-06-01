@@ -1,0 +1,200 @@
+<%= form_for @order do |f| %>
+  <%= f.hidden_field :manual %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :account_id, 'Marketplace' %>
+      <div class="field">
+        <% if @order.user == current_user %>
+          <%= wrap_select f.select :account_id, current_user.accounts.map { |a| [a.marketplace.name, a.id] }, :required => true, :prompt => 'Choose...' %>
+        <% else %>
+          <%= text_field_tag 'marketplace', @order.account.marketplace.name, :disabled => true %>
+        <% end %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :uid %>
+      <div class="field">
+        <%= f.text_field :uid, :placeholder => 'Order ID', :required => true %>
+      </div>
+    </div>
+
+    <h3 class="white">Status</h3>
+
+    <div class="row">
+      <%= f.label :payment_status %>
+      <div class="field">
+        <%= wrap_select f.select :payment_status, Order::PAYMENT_STATUSES, :required => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :shipped %>
+      <div class="field">
+        <%= f.check_box :shipped %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :cancelled %>
+      <div class="field">
+        <%= f.check_box :cancelled %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :cancel_reason %>
+      <div class="field">
+        <%= f.text_field :cancel_reason, :placeholder => '(if cancelled)' %>
+      </div>
+    </div>
+
+    <h3 class="white">Financials</h3>
+
+    <div class="row">
+      <%= f.label :sub_total %>
+      <div class="field">
+        <%= f.number_field :sub_total, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :grand_total %>
+      <div class="field">
+        <%= f.number_field :grand_total, :placeholder => '0.00', :required => true, :min => 0, :step => 0.01 %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :tax %>
+      <div class="field">
+        <%= f.number_field :tax, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :marketplace_fee %>
+      <div class="field">
+        <%= f.number_field :marketplace_fee, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :processing_fee %>
+      <div class="field">
+        <%= f.number_field :processing_fee, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+      </div>
+    </div>
+
+    <h3 class="white">Other Details</h3>
+
+    <div class="row">
+      <%= f.label :create_timestamp, 'Created At' %>
+      <div class="field">
+        <%= wrap_date_field f.text_field :create_timestamp, :class => 'date-field', :placeholder => 'Now' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :payment_method %>
+      <div class="field">
+        <%= f.text_field :payment_method, :placeholder => 'PayPal / Credit Card / Wire etc.' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :notes %>
+      <div class="field">
+        <%= f.text_area :notes, :placeholder => 'Order comments' %>
+      </div>
+    </div>
+
+    <h3 class="white">Buyer Details</h3>
+
+    <%= f.fields_for :buyer do |fb| %>
+      <div class="row">
+        <%= fb.label :email %>
+        <div class="field">
+          <%= fb.email_field :email, :placeholder => 'Buyer Email' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fb.label :name %>
+        <div class="field">
+          <%= fb.text_field :name, :placeholder => 'Buyer Name' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fb.label :phone_number %>
+        <div class="field">
+          <%= fb.text_field :phone_number, :placeholder => 'Buyer Phone' %>
+        </div>
+      </div>
+    <% end %>
+
+    <h3 class="white">Shipping Details</h3>
+    <%= f.fields_for :order_shipping_detail do |fs| %>
+      <div class="row">
+        <%= fs.label :price, 'Shipping Paid' %>
+        <div class="field">
+          <%= fs.number_field :price, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :real_price, 'Shipping Actual' %>
+        <div class="field">
+          <%= fs.number_field :real_price, :placeholder => '0.00', :min => 0, :step => 0.01 %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :name %>
+        <div class="field">
+          <%= fs.text_field :name, :placeholder => 'Name' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :phone %>
+        <div class="field">
+          <%= fs.text_field :phone, :placeholder => 'Phone' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :city %>
+        <div class="field">
+          <%= fs.text_field :city, :placeholder => 'City' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :state %>
+        <div class="field">
+          <%= fs.text_field :state, :placeholder => 'State' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :postal_code %>
+        <div class="field">
+          <%= fs.text_field :postal_code, :placeholder => 'ZIP' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :address_line_1 %>
+        <div class="field">
+          <%= fs.text_field :address_line_1, :placeholder => 'Address Line 1' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :address_line_2 %>
+        <div class="field">
+          <%= fs.text_field :address_line_2, :placeholder => 'Address Line 2' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :carrier %>
+        <div class="field">
+          <%= fs.text_field :carrier, :placeholder => 'Shipping Carrier' %>
+        </div>
+      </div>
+      <div class="row">
+        <%= fs.label :tracking_code %>
+        <div class="field">
+          <%= fs.text_field :tracking_code, :placeholder => 'Carrier Tracking Code' %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>

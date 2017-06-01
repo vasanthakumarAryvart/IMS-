@@ -1,0 +1,51 @@
+<% @page_title = "Manage Item Sources" %>
+<% @body_classes << "" %>
+
+<h1>
+  <%= @page_title %>
+  <%= link_to 'Add Source', '#', :class => 'btn btn-primary btn-medium float-right', 'data-popup-url' => new_admin_item_source_path %>
+</h1>
+
+<div class="light-container">
+  <table class="strip-table centered-table">
+    <thead>
+    <tr>
+      <th class="text-left">Name</th>
+      <th>Short Name</th>
+      <th>Profit Share %</th>
+      <th>Items</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% if @sources.any? %>
+      <% @sources.each { |source| %>
+        <tr>
+          <td class="text-left">
+            <%= source.name %>
+            <div class="record-actions on-parent-hover">
+              <%= link_to '#', :title => 'Edit', 'data-popup-url' => edit_admin_item_source_path(source) do %>
+                <i class="fa fa-pencil"></i>
+              <% end %>
+              <%= link_to admin_item_source_path(source),
+                          'data-confirm' => 'Are you sure? This will remove the item source and unlink any related items',
+                          :method => 'delete',
+                          :title => 'Delete' do %>
+                <i class="fa fa-trash"></i>
+              <% end %>
+            </div>
+          </td>
+          <td><%= source.short_name %></td>
+          <td><%= source.profit_share_percent %></td>
+          <td><%= source.inventory_items.count %></td>
+        </tr>
+      <% } %>
+    <% else %>
+      <tr>
+        <td colspan="4">
+          <center>No item sources</center>
+        </td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+</div>

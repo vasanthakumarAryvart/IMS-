@@ -1,0 +1,29 @@
+<table class="strip-table sortable centered-table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Seller</th>
+    <th>Listings</th>
+    <th>Orders</th>
+    <th>Acquisition</th>
+    <th>Revenue</th>
+    <th>Net</th>
+    <th>Profit Rate %</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% @stats.each { |stat| %>
+    <% user = stat[:user] %>
+    <tr>
+      <td><%= user.id %></td>
+      <td class=""><%= link_to user.full_name, admin_users_path + "#u#{user.id}" %></td>
+      <td><%= stat[:listings].length %></td>
+      <td><%= stat[:orders].length %></td>
+      <td><%= number_to_currency acquisition_costs = stat[:orders].map(&:acquisition_cost).inject(&:+) || 0 %></td>
+      <td><%= number_to_currency revenue = stat[:orders].select(&:grand_total).map(&:grand_total).inject(&:+) || 0 %></td>
+      <td><%= number_to_currency net = stat[:orders].map(&:net_profit).inject(&:+) || 0 %></td>
+      <td><%= acquisition_costs == 0 ? 0 : (100.0 * net / acquisition_costs).round %></td>
+    </tr>
+  <% } %>
+  </tbody>
+</table>

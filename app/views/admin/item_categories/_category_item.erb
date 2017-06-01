@@ -1,0 +1,51 @@
+<%
+  indent = 0
+  c = category_item
+  indent += 1 while c = c.parent_category
+%>
+
+<tr data-parent-id="<%= category_item.parent_category_id %>" style="<%= 'display: none' if category_item.parent_category %>">
+  <td style="padding-left: <%= indent * 15 %>px">
+    <div class="expand-category" data-id="<%= category_item.id %>"><%= "+" if category_item.child_categories.any? %></div>
+    <%= category_item.title %>
+    <div class="record-actions on-parent-hover">
+      <%= link_to '#', :title => 'Add Sub-Category', 'data-popup-url' => new_admin_item_category_path(:parent => category_item) do %>
+        <i class="fa fa-plus-circle"></i>
+      <% end %>
+      <%= link_to '#', :title => 'Edit', 'data-popup-url' => edit_admin_item_category_path(category_item) do %>
+        <i class="fa fa-pencil"></i>
+      <% end %>
+      <%= link_to admin_item_category_custom_fields_path(category_item), :title => 'Custom Fields' do %>
+        <i class="fa fa-table"></i>
+      <% end %>
+      <%= link_to admin_item_category_path(category_item),
+                  'data-confirm' => 'Are you sure?',
+                  :class => ('disabled' unless category_item.can_delete?),
+                  :method => 'delete',
+                  :title => (!category_item.can_delete? ? 'This category has listings or templates or child categories. Unassign them in order to delete' : 'Delete') do %>
+        <i class="fa fa-trash"></i>
+      <% end %>
+    </div>
+  </td>
+  <td class="text-center"><%= category_item.custom_fields.length %></td>
+  <td class="text-center"><%= category_item.listings.length %></td>
+
+  <% Marketplace.with_api.each { |marketplace| %>
+    <td class="text-center">
+      <% if category_mapping = category_item.marketplace_category_mapping_for(marketplace) %>
+        <div class="record-actions on-parent-hover" style="width: 10px"></div>
+        <%= link_to 'view', '#', :class => "green", 'data-popup-url' => edit_admin_item_category_marketplace_category_mapping_path(category_item, category_mapping) %>
+        <div class="record-actions on-parent-hover">
+          <%= link_to admin_item_category_marketplace_category_mapping_path(category_item, category_mapping),
+                      'data-confirm' => "This will reset all custom field mappings for #{category_mapping.marketplace.name}. Are you sure?", :method => 'delete', :title => 'Remove Mapping' do %>
+            <i class="fa fa-trash"></i>
+          <% end %>
+        </div>
+      <% else %>
+        <%= link_to 'set', '#', :class => 'red', 'data-popup-url' => new_admin_item_category_marketplace_category_mapping_path(category_item, :marketplace_id => marketplace.id) %>
+      <% end %>
+    </td>
+  <% } %>
+</tr>
+<tr style="display: none;"><td colspan="<%= 3 + Marketplace.with_api.count %>"></tr>
+<%= render :partial => 'category_item', :collection => category_item.child_categories if category_item.child_categories.any? %>

@@ -1,0 +1,536 @@
+<div class="light-container edit-image-popup" style="display: none; width: 600px" data-popup-box="edit-image-popup" data-init="setupImageEditor();">
+  <h1>Edit Image</h1>
+
+  <div class="toolbox">
+    <a href="#" class="btn btn-small activate" data-tool="crop">Crop Image</a>
+    <a href="#" class="btn btn-small activate" data-tool="effects">Add Effects</a>
+    <a href="#" class="btn btn-small activate" data-tool="magic-edge">Remove Background</a>
+
+    <div class="tool crop" style="display: none">
+      <a href="#" class="btn btn-small save-crop">Apply Crop</a>
+      <a href="#" class="btn btn-small cancel">Cancel</a>
+    </div>
+    <div class="tool effects" style="display: none">
+      <a href="#" class="btn btn-small save-effects">Apply Effect</a>
+      <a href="#" class="btn btn-small cancel">Cancel</a>
+
+      <div class="effect-filters"></div>
+      <div class="clearfix"></div>
+    </div>
+    <div class="tool magic-edge" style="display: none">
+      <a href="#" class="btn btn-small cancel">Done</a>
+    </div>
+  </div>
+
+  <div class="canvas"></div>
+
+  <div class="row actions">
+    <%= link_to 'Done', '#', :class => 'btn popup-close save-image' %>
+    <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+  </div>
+</div>
+
+<script>
+  function setupImageEditor() {
+    var img = imageEditorCurrentImage();
+    $(img).load(function () {
+      resetFromImage();
+    });
+    img.src = $('.new-listing-container .images .current-image img')[0].src;
+
+    // check WebGL
+    try {
+      fx.canvas()
+    }
+    catch (ex) {
+      // WebGL not supported, disabling Effects button
+      imageEditorPopup().find('.activate[data-tool=effects]').attr('disabled');
+    }
+  }
+
+  function resetFromImage(img) {
+    img = img || imageEditorCurrentImage();
+    var canvas_el = imageEditorCanvas();
+    var canvas = canvas_el.getContext('2d');
+    if (img && canvas) {
+      canvas_el.width = img.naturalWidth;
+      canvas_el.height = img.naturalHeight;
+      $(canvas_el).height($(canvas_el).width() * canvas.height / canvas.width);
+      canvas.drawImage(img, 0, 0);
+    }
+  }
+
+  function imageEditorCurrentImage() {
+    var img = imageEditorPopup().find('img.current')[0];
+    if (!img)
+      img = imageEditorPopup().append('<img class="current"/>').find('img.current')[0];
+    return img;
+  }
+
+  function imageEditorPopup() {
+    return $('.popup-box-overlay .edit-image-popup');
+  }
+
+  function imageEditorCanvas() {
+    var canvas = imageEditorPopup().find('.canvas canvas')[0];
+    if (!canvas)
+      canvas = imageEditorPopup().find('.canvas').append('<canvas></canvas>').find('canvas')[0];
+    return canvas;
+  }
+
+  $('body')
+      .on('click', '.edit-image-popup .toolbox .activate', function () {
+        imageEditorPopup().find('.activate').hide();
+        $(this).parents('.toolbox').find('.tool.' + $(this).data('tool')).show();
+        imageEditorPopup().find('.save-image').hide();
+        if ($(this).data('tool') == 'magic-edge')
+          openMagicEdgePreviewPopup();
+        //openMagicEdgeEditorPopup();
+        return false;
+      })
+      .on('click', '.edit-image-popup .toolbox .cancel', function () {
+        $(this).parents('.toolbox').find('.tool').hide();
+        imageEditorPopup().find('.activate').show();
+        imageEditorPopup().find('.save-image').show();
+        return false;
+      })
+      .on('click', '.edit-image-popup .toolbox .activate[data-tool=crop]', function () {
+        $.Jcrop($(imageEditorCanvas()), {
+          aspectRatio: 4.0 / 3.0,
+          boxWidth: $(imageEditorCanvas()).width(),
+          trueSize: [imageEditorCanvas().width, imageEditorCanvas().height],
+          setSelect: [0, 0, $(imageEditorCanvas()).width(), $(imageEditorCanvas()).height()]
+        });
+        return false;
+      })
+      .on('click', '.edit-image-popup .toolbox .tool.crop .save-crop', function () {
+        var crop = $(imageEditorCanvas()).data().Jcrop;
+        var canvas_el = imageEditorCanvas();
+        var canvas = canvas_el.getContext("2d");
+        var bounds = crop.tellSelect();
+        canvas_el.width = bounds.w;
+        canvas_el.height = bounds.h;
+        canvas.drawImage(imageEditorCurrentImage(), bounds.x, bounds.y, bounds.w, bounds.h, 0, 0, bounds.w, bounds.h);
+        //canvas.drawImage(imageEditorCurrentImage(), Math.round(bounds.x * scale), Math.round(bounds.y * scale), Math.round(width), Math.round(height), 0, 0, Math.round(width), Math.round(height));
+        imageEditorCurrentImage().src = canvas_el.toDataURL();
+        imageEditorPopup().find('.toolbox .crop .cancel').click();
+        return false;
+      })
+      .on('click', '.edit-image-popup .toolbox .tool.crop .cancel', function () {
+        $(imageEditorCanvas()).data().Jcrop.destroy();
+        resetFromImage();
+        return false;
+      })
+      .on('click', '.edit-image-popup .toolbox .tool.effects .save-effects', function () {
+        imageEditorCurrentImage().src = imageEditorPopup().find('.tool.effects canvas')[0].toDataURL();
+        imageEditorPopup().find('.toolbox .tool.effects .cancel').click();
+        return false;
+      })
+      .on('click', '.edit-image-popup .toolbox .tool.effects .cancel', function () {
+        $(imageEditorCanvas()).show();
+        resetFromImage();
+        return false;
+      })
+      .on('click', '.edit-image-popup .toolbox .activate[data-tool=effects]', function () {
+        setupImageFilters();
+        return false;
+      })
+      .on('click', '.edit-image-popup .save-image', function () {
+        var activeImg = $('.image-list .image.active').first();
+        activeImg.css('background-image', 'url(' + imageEditorCurrentImage().src + ')').addClass('changed');
+        selectImage(activeImg);
+        dumpImageInputs();
+        return false;
+      });
+
+  var imageFilters = {
+    'Adjust': [
+      {
+        caption: 'Brightness / Contrast',
+        method: 'brightnessContrast',
+        sliders: [
+          {param: 'brightness', caption: 'Brightness', min: -1, max: 1, start: 0, step: 0.01},
+          {param: 'contrast', caption: 'Contrast', min: -1, max: 1, start: 0, step: 0.01}
+        ]
+      },
+      {
+        caption: 'Hue / Saturation',
+        method: 'hueSaturation',
+        sliders: [
+          {param: 'hue', caption: 'Hue', min: -1, max: 1, start: 0, step: 0.01},
+          {param: 'saturation', caption: 'Saturation', min: -1, max: 1, start: 0, step: 0.01}
+        ]
+      },
+      {
+        caption: 'Vibrance',
+        method: 'vibrance',
+        sliders: [
+          {param: 'amount', caption: 'Amount', min: -1, max: 1, start: 0.5, step: 0.01}
+        ]
+      },
+      {
+        caption: 'Denoise',
+        method: 'denoise',
+        sliders: [
+          {param: 'exponent', caption: 'Exponent', min: 0, max: 50, start: 20, step: 1}
+        ]
+      },
+      {
+        caption: 'Unsharp Mask',
+        method: 'unsharpMask',
+        sliders: [
+          {param: 'radius', caption: 'Radius', min: 0, max: 200, start: 20, step: 1},
+          {param: 'strength', caption: 'Strength', min: 0, max: 5, start: 2, step: 0.01}
+        ]
+      },
+      {
+        caption: 'Noise',
+        method: 'noise',
+        sliders: [
+          {param: 'amount', caption: 'Amount', min: 0, max: 1, start: 0.5, step: 0.01}
+        ]
+      },
+      {
+        caption: 'Sepia',
+        method: 'sepia',
+        sliders: [
+          {param: 'amount', caption: 'Amount', min: 0, max: 1, start: 1, step: 0.01}
+        ]
+      },
+      {
+        caption: 'Vignette',
+        method: 'vignette',
+        sliders: [
+          {param: 'size', caption: 'Size', min: 0, max: 1, start: 0.5, step: 0.01},
+          {param: 'amount', caption: 'Amount', min: 0, max: 1, start: 0.5, step: 0.01}
+        ]
+      }
+    ],
+    'Blur': [
+      {
+        caption: 'Triangle Blur',
+        method: 'triangleBlur',
+        sliders: [
+          {param: 'radius', caption: 'Radius', min: 0, max: 200, start: 50, step: 1}
+        ]
+      },
+      {
+        caption: 'Lens Blur',
+        method: 'lensBlur',
+        sliders: [
+          {param: 'radius', caption: 'Radius', min: 0, max: 50, start: 10, step: 1},
+          {param: 'brightness', caption: 'Brightness', min: -1, max: 1, start: 0.75, step: 0.01},
+          {param: 'angle', caption: 'Angle', min: -Math.PI, max: Math.PI, start: 0, step: 0.01}
+        ]
+      }
+    ],
+//      new Filter('Zoom Blur', 'zoomBlur', function () {
+//        this.addNub('center', 0.5, 0.5);
+//        this.addSlider('strength', 'Strength', 0, 1, 0.3, 0.01);
+//      }, function () {
+//        this.setCode('canvas.draw(texture).zoomBlur(' + this.center.x + ', ' + this.center.y + ', ' + this.strength + ').update();');
+//      }),
+//      new Filter('Tilt Shift', 'tiltShift', function () {
+//        this.addNub('start', 0.15, 0.75);
+//        this.addNub('end', 0.75, 0.6);
+//        this.addSlider('blurRadius', 'Blur Radius', 0, 50, 15, 1);
+//        this.addSlider('gradientRadius', 'Gradient Radius', 0, 400, 200, 1);
+//      }, function () {
+//        this.setCode('canvas.draw(texture).tiltShift(' + this.start.x + ', ' + this.start.y + ', ' + this.end.x + ', ' + this.end.y + ', ' + this.blurRadius + ', ' + this.gradientRadius + ').update();');
+//      }),
+    'Warp': [],
+//    ],
+//    'Warp': [
+//      new Filter('Swirl', 'swirl', function () {
+//        this.addNub('center', 0.5, 0.5);
+//        this.addSlider('angle', 'Angle', -25, 25, 3, 0.1);
+//        this.addSlider('radius', 'Radius', 0, 600, 200, 1);
+//      }, function () {
+//        this.setCode('canvas.draw(texture).swirl(' + this.center.x + ', ' + this.center.y + ', ' + this.radius + ', ' + this.angle + ').update();');
+//      }),
+//      new Filter('Bulge / Pinch', 'bulgePinch', function () {
+//        this.addNub('center', 0.5, 0.5);
+//        this.addSlider('strength', 'Strength', -1, 1, 0.5, 0.01);
+//        this.addSlider('radius', 'Radius', 0, 600, 200, 1);
+//      }, function () {
+//        this.setCode('canvas.draw(texture).bulgePinch(' + this.center.x + ', ' + this.center.y + ', ' + this.radius + ', ' + this.strength + ').update();');
+//      }),
+//      new Filter('Perspective', 'perspective', function () {
+//        var w = 640, h = 425;
+//        this.addNub('a', perspectiveNubs[0] / w, perspectiveNubs[1] / h);
+//        this.addNub('b', perspectiveNubs[2] / w, perspectiveNubs[3] / h);
+//        this.addNub('c', perspectiveNubs[4] / w, perspectiveNubs[5] / h);
+//        this.addNub('d', perspectiveNubs[6] / w, perspectiveNubs[7] / h);
+//      }, function () {
+//        var before = perspectiveNubs;
+//        var after = [this.a.x, this.a.y, this.b.x, this.b.y, this.c.x, this.c.y, this.d.x, this.d.y];
+//        this.setCode('canvas.draw(texture).perspective([' + before + '], [' + after + ']).update();');
+//      }, 'perspective.jpg')
+//    ],
+    'Other': [
+      {
+        caption: 'Ink',
+        method: 'ink',
+        sliders: [
+          {param: 'strength', caption: 'Strength', min: 0, max: 1, start: 0.25, step: 0.01}
+        ]
+      },
+      {
+        caption: 'Edge Work',
+        method: 'edgeWork',
+        sliders: [
+          {param: 'radius', caption: 'Radius', min: 0, max: 200, start: 10, step: 1}
+        ]
+      }
+    ]
+
+//      new Filter('Hexagonal Pixelate', 'hexagonalPixelate', function () {
+//        this.addNub('center', 0.5, 0.5);
+//        this.addSlider('scale', 'Scale', 10, 100, 20, 1);
+//      }, function () {
+//        this.setCode('canvas.draw(texture).hexagonalPixelate(' + this.center.x + ', ' + this.center.y + ', ' + this.scale + ').update();');
+//      }),
+//      new Filter('Dot Screen', 'dotScreen', function () {
+//        this.addNub('center', 0.5, 0.5);
+//        this.addSlider('angle', 'Angle', 0, Math.PI / 2, 1.1, 0.01);
+//        this.addSlider('size', 'Size', 3, 20, 3, 0.01);
+//      }, function () {
+//        this.setCode('canvas.draw(texture).dotScreen(' + this.center.x + ', ' + this.center.y + ', ' + this.angle + ', ' + this.size + ').update();');
+//      }),[[ju]]
+//        this.addSlider('angle', 'Angle', 0, Math.PI / 2, 0.25, 0.01);
+//        this.addSlider('size', 'Size', 3, 20, 4, 0.01);
+//      }, function () {
+//        this.setCode('canvas.draw(texture).colorHalftone(' + this.center.x + ', ' + this.center.y + ', ' + this.angle + ', ' + this.size + ').update();');
+//      })
+//    ]
+  };
+
+  function setupImageFilters() {
+    $(imageEditorCanvas()).hide();
+    var filter_canvas = fx.canvas();
+    imageEditorPopup().find('.tool.effects').find('canvas').remove();
+    imageEditorPopup().find('.tool.effects').append(filter_canvas);
+    filter_canvas.width = imageEditorCanvas().width;
+    filter_canvas.height = imageEditorCanvas().height;
+    filter_canvas.draw(filter_canvas.texture(imageEditorCurrentImage())).update();
+
+    var filters_panel = imageEditorPopup().find('.effect-filters').html('');
+    var filters_select = filters_panel.append('<div class="effect-option"><div>Filter</div><select id="filters-list"></select></div>').find('select');
+    filters_select.append('<option selected>Choose One...</option>');
+    for (var category in imageFilters) {
+      filters_select.append('<option disabled="true">--- ' + category + ' ---</option>');
+      $(imageFilters[category]).each(function (i, filter) {
+        filters_select.append('<option value="' + filter.method + '">' + filter.caption + '</option>').find('option').last().data('options', filter);
+      })
+    }
+    filters_select.change(function () {
+      var options = $($(this).find('option')[this.selectedIndex]).data('options');
+      addEffectSliders(options.sliders)
+    })
+  }
+
+  function addEffectSliders(sliders) {
+    var filters_panel = imageEditorPopup().find('.effect-filters');
+    filters_panel.find('.slider-box').remove();
+    $(sliders).each(function (i, slider) {
+      var slider_panel = filters_panel.append('<div class="effect-option slider-box"><div>' + slider.caption + '</div><div class="slider"></div></div>').find('.slider-box');
+      slider_panel.find('.slider').data('id', i).slider({
+        slide: effectSliderOnChange,
+        change: effectSliderOnChange,
+        min: slider.min,
+        max: slider.max,
+        value: slider.start,
+        step: slider.step
+      });
+      effectSliderOnChange();
+    });
+  }
+
+  function effectSliderOnChange() {
+    var select = imageEditorPopup().find('#filters-list');
+    var options = $(select.find('option')[select[0].selectedIndex]).data('options');
+    var params = [];
+    var sliders = imageEditorPopup().find('.effect-option.slider-box .slider.ui-slider');
+    if (sliders.length == options.sliders.length) {
+      $(options.sliders).each(function (i, slider_config) {
+        params.push($(sliders[i]).data('uiSlider').value());
+      });
+      var canvas = imageEditorPopup().find('.tool.effects canvas')[0];
+      canvas.draw(canvas.texture(imageEditorCurrentImage())); // reset current image
+      canvas[options.method].apply(canvas, params).update();
+    }
+  }
+
+  var magicEdgePresets = [];
+  function populateMagicEdgePresets() {
+    _.each([[1, 2, 3, 4], [1, 2], [2, 3], [3, 4], [1, 4]], function (corners) {
+      _.each([5, 10, 15, 20], function (tolerance) {
+        magicEdgePresets.push({
+          magicWandTolerance: tolerance,
+          magicWandBorderWidth: 5,
+          corners: corners
+        })
+      })
+    })
+  }
+  populateMagicEdgePresets();
+
+  function setupMagicEdge(holder, preset) {
+    var me = new MagicEdge();
+    me.setConfig({
+      magicWandTolerance: preset.magicWandTolerance,
+      magicWandBorderWidth: preset.magicWandBorderWidth
+    });
+
+    me.init(holder);
+    me.brApplication.loadImage.apply(me.brApplication, [imageEditorCurrentImage().src]);
+    $(holder).data('magicEdge', me);
+    $(holder).data('magicEdgePreset', preset);
+    $(holder).find('.BR-commandBtn.BR-commandSaveImage, .BR-commandBtn.BR-commandDownloadImage, .BR-commandBtn.BR-commandSelectImage').remove();
+    $(holder).find('.BR-commandBtn.BR-commandConvert').after('<div class="BR-commandBtn BR-commandText popup-close" title="Cancel and Close">Cancel</div>')
+    $(holder).find('.BR-commandBtn.BR-commandConvert').after('<div class="BR-commandBtn BR-commandText BR-commandDone popup-close" title="Save and Close">Save</div>')
+    $(holder).find('.BR-commandPreviewEdge').parent().remove();
+    $(holder).find('.BR-commandDone').click(function (e) {
+      e.preventDefault();
+      try {
+        var outputConfig = me.brApplication.getOutputConfig();
+        var jpgQualityDec = outputConfig.type == "jpg" ? outputConfig.jpgQuality / 100 : undefined;
+        me.brApplication.createTransparentImageCanvas();
+        var outputCanvas = me.brApplication.getOutputImageCanvas();
+        imageEditorCurrentImage().src = outputCanvas.toDataURL(outputConfig.mime, jpgQualityDec)
+      }
+      catch (ex) {
+        //alert("There was an error retrieving the result image")
+      }
+    });
+    setTimeout(function () {
+      var br = me.brApplication;
+      var bounds = br.renderImageBounds;
+      var offset = {
+        x: br.imageHolder.getBoundingClientRect().left + window.pageXOffset,
+        y: br.imageHolder.getBoundingClientRect().top + window.pageYOffset
+      };
+      // magic wand
+      br.setLeftTool('MAGICWAND');
+      _.each(preset.corners, function (corner) {
+        switch (corner) {
+          case 1:
+            br.mouseDownHandler(offset.x + bounds.x + 5, offset.y + bounds.y + 5);
+          case 2:
+            br.mouseDownHandler(offset.x + bounds.x + bounds.width - 5, offset.y + bounds.y + 5);
+          case 3:
+            br.mouseDownHandler(offset.x + bounds.x + bounds.width - 5, offset.y + bounds.y + bounds.height - 5);
+          case 4:
+            br.mouseDownHandler(offset.x + bounds.x + 5, offset.y + bounds.y + bounds.height - 5);
+        }
+        br.mouseUpHandler(new MouseEvent(null));
+      });
+
+      // draw red line
+      br.setLeftTool('BGLINE');
+      br.mouseDownHandler(offset.x + bounds.x, offset.y + bounds.y);
+      br.mouseMoveHandler(offset.x + bounds.x + bounds.width, offset.y + bounds.y);
+      br.mouseMoveHandler(offset.x + bounds.x + bounds.width, offset.y + bounds.y + bounds.height);
+      br.mouseMoveHandler(offset.x + bounds.x, offset.y + bounds.y + bounds.height);
+      br.mouseMoveHandler(offset.x + bounds.x, offset.y + bounds.y);
+      br.mouseUpHandler(new MouseEvent(null));
+
+      // draw green line
+      br.setLeftTool('FGLINE');
+      br.mouseDownHandler(offset.x + bounds.x + bounds.width / 2 - 5, offset.y + bounds.y + bounds.height / 2 - 5);
+      br.mouseMoveHandler(offset.x + bounds.x + bounds.width / 2 + 5, offset.y + bounds.y + bounds.height / 2 + 5);
+      br.mouseDownHandler(offset.x + bounds.x + bounds.width / 2 + 5, offset.y + bounds.y + bounds.height / 2 - 5);
+      br.mouseMoveHandler(offset.x + bounds.x + bounds.width / 2 - 5, offset.y + bounds.y + bounds.height / 2 + 5);
+      br.mouseUpHandler(new MouseEvent(null));
+
+      // convert!
+      br.convertImage_Client();
+    }, 1);
+
+    return me;
+  }
+
+  function convertCheck(holder) {
+    var me = $(holder).data('magicEdge');
+    var preset = $(holder).data('magicEdgePreset');
+    if (me.brApplication.converted) {
+      var outputConfig = me.brApplication.getOutputConfig();
+      var jpgQualityDec = outputConfig.type == "jpg" ? outputConfig.jpgQuality / 100 : undefined;
+      me.brApplication.createTransparentImageCanvas();
+      var outputCanvas = me.brApplication.getOutputImageCanvas();
+      $('.magic-edge-preview-popup .previews').append('<div class="preview" data-preset="' + magicEdgePresets.indexOf(preset) + '"><img/><div><a href="#" class="btn btn-small btn-choose popup-close">choose</a> <a href="#" class="btn btn-small btn-edit popup-close">edit</a></div></div>').children().last().find('img').attr('src', outputCanvas.toDataURL(outputConfig.mime, jpgQualityDec));
+      $(holder).remove();
+      if ($('.magic-edge-hidden-editor').length == 0) {
+        var last_preset = _.max(_.map($('.magic-edge-preview-popup .previews .preview'), function (preview) {
+          return $(preview).data('preset');
+        }));
+        $('.magic-edge-preview-popup .buttons').show().find('.btn-more').data('last-preset', last_preset);
+        if (last_preset >= magicEdgePresets.length - 1)
+          $('.magic-edge-preview-popup .buttons .btn-more').hide();
+      }
+    }
+    else
+      setTimeout(convertCheck, 100, holder);
+  }
+
+  function generatePreviews(from_preset, count) {
+    count = count || 8;
+    var idx = 0;
+    _.each(_.slice(magicEdgePresets, from_preset, from_preset + count), function (preset) {
+      idx += 1;
+      setTimeout(function () {
+        var holder = $('body').append('<div class="magic-edge-hidden-editor"></div>').children().last()[0];
+        setupMagicEdge(holder, preset);
+        convertCheck(holder);
+      }, idx * 100);
+    });
+  }
+
+  function openMagicEdgePreviewPopup() {
+    openModalPopup($('#magic-edge-preview-popup-template').html());
+    $('.magic-edge-preview-popup .buttons').hide();
+    generatePreviews(0);
+    $('.magic-edge-preview-popup').on('click', '.popup-close', function () {
+      imageEditorPopup().find('.toolbox .tool.magic-edge .cancel').click();
+    });
+  }
+
+  function openMagicEdgeEditorPopup(preset) {
+    openModalPopup('<div class="light-container magic-edge-editor-popup"></div>');
+    setupMagicEdge($('.magic-edge-editor-popup')[0], preset);
+    $('.magic-edge-editor-popup').find('.popup-close').click(function () {
+      imageEditorPopup().find('.toolbox .tool.magic-edge .cancel').click();
+    });
+  }
+
+  $('body').on('click', '.magic-edge-preview-popup .previews .preview .btn-edit', function (e) {
+    e.preventDefault();
+    openMagicEdgeEditorPopup(magicEdgePresets[$(this).parents('.preview').data('preset')]);
+  });
+
+  $('body').on('click', '.magic-edge-preview-popup .previews .preview .btn-choose', function (e) {
+    e.preventDefault();
+    imageEditorCurrentImage().src = $(this).parents('.preview').find('img').attr('src');
+  });
+
+  $('body').on('click', '.magic-edge-preview-popup .btn-more', function (e) {
+    e.preventDefault();
+    $(this).parent().hide();
+    generatePreviews($(this).data('last-preset') + 1);
+  });
+</script>
+
+<script type="text/x-handlebars-template" id="magic-edge-preview-popup-template">
+  <div class="light-container magic-edge-preview-popup">
+    <h1>Background Removal Previews</h1>
+    <div class="previews">
+      <div class="loading text-center">Generating previews may take a while, please be patient</div>
+    </div>
+    <div class="buttons">
+      <%= link_to 'More Previews', '#', :class => 'btn btn-more' %>
+      <%= link_to 'Close', '#', :class => 'btn popup-close float-right' %>
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</script>
+

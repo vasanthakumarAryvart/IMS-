@@ -1,0 +1,30 @@
+<% @page_title = "New Listing Template - #{@listing_template.item_category.title}".html_safe %>
+<% @body_classes << "listings listing-templates new-listing" %>
+
+<h1>
+  <%= back_btn(admin_listing_templates_path) %>
+  <%= "New Listing Template &ndash; #{@listing_template.item_category.title}".html_safe %>
+  <%= link_to 'Change Category', '#', :class => 'btn btn-primary float-right', 'data-open-popup' => "new-listing" %>
+</h1>
+
+<%= render :partial => 'form', :locals => { listing_template: @listing_template } %>
+
+<div class="light-container" style="display: none; width: 350px" data-popup-box="new-listing">
+  <h1>New Listing Template</h1>
+
+  <p>Please choose a category from the list below:</p>
+
+  <div class="new-listing-categories">
+    <% recursive_sorted_categories_list.each { |item| %>
+      <div style="<%= "padding-left: #{20 * item[:indent]}px" %>" class="<%= "top-category" if item[:indent] == 0 %>">
+        - <%= link_to item[:title], new_admin_listing_template_path(:item_category_id => item[:id]) %>
+      </div>
+    <% } %>
+  </div>
+
+  <p class="text-center gray">NOTE: this will reset current form!</p>
+
+  <div>
+    <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+  </div>
+</div>

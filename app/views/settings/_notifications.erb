@@ -1,0 +1,22 @@
+<table class="strip-table notifications-list sortable">
+  <tr>
+    <th style="width: 120px">Date</th>
+    <th style="width: 75px">Account</th>
+    <th class="text-left">Notification</th>
+  </tr>
+  <% if notifications.any? %>
+    <% notifications.each { |n| %>
+      <tr class="notification <%= 'viewed' if n.viewed? %>">
+        <td><%= l n.created_at.to_date %></td>
+        <td><%= n.account.try(:title) || '-' %></td>
+        <td class="text-left">
+          <%= link_to ((defined?(truncate_after) && truncate_after > 0) ? n.title.truncate(truncate_after, separator: ' ') : n.title), n.url %>
+        </td>
+      </tr>
+    <% } %>
+  <% else %>
+    <tr>
+      <td colspan="3"><center>No notifications</center></td>
+    </tr>
+  <% end %>
+</table>

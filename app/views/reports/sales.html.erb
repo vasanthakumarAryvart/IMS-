@@ -1,0 +1,26 @@
+<% unless @filter[:ajax] %>
+  <% @page_title = "Sales Report" %>
+  <% @body_classes << "reports" %>
+
+  <h1>
+    <%= @page_title %>
+  </h1>
+
+  <div class="light-container">
+    <form id="sales-report-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= sales_report_path %>">
+      <%= hidden_field_tag 'filter[ajax]', true %>
+      Filters
+      <%= wrap_select select_tag 'filter[marketplace]', options_for_select(Marketplace.all.map(&:name), @filter[:marketplace]), :prompt => 'Marketplace' %>
+      <%= wrap_date_field text_field_tag 'filter[date_from]', @filter[:date_from] || 60.days.ago.to_date, :placeholder => 'Date From', :class => 'date-field' %>
+      <%= wrap_date_field text_field_tag 'filter[date_to]', @filter[:date_to] || Date.today, :placeholder => 'Date To', :class => 'date-field' %>
+      <div class="float-right">
+        Group by
+        <%= wrap_select select_tag('filter[group]', options_for_select([:day, :month, :year], @filter[:group] || :day)), :style => 'width: 111px!important' %>
+      </div>
+    </form>
+
+    <div id="filtered-content"></div>
+  </div>
+<% else %>
+  <%= render :partial => 'sales', :locals => { :groups => @groups } %>
+<% end %>

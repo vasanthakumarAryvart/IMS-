@@ -1,0 +1,9 @@
+<% @page_title = "Edit Listing Template" %>
+<% @body_classes << "listings new-listing" %>
+
+<h1>
+  <%= back_btn(admin_listing_templates_path) %>
+  <%= @page_title %>
+</h1>
+
+<%= render :partial => 'form', :locals => { listing_template: @listing_template } %>

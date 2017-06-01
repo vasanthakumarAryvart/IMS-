@@ -1,0 +1,5 @@
+<div class="variable-pricing-box">
+  <%= wrap_select select_tag "#{name}[operator]", options_for_select(%w{+ -}, (value[:operator] if value)), :required => required %>
+  <%= number_field_tag "#{name}[value]", (value[:value] if value), :min => 0, :placeholder => '0.00', :required => required, :step => 0.01 %>
+  <%= wrap_select select_tag "#{name}[unit]", options_for_select(%w{% USD}, (value[:unit] if value)), :required => required %>
+</div>

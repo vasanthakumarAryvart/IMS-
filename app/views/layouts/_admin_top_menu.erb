@@ -1,0 +1,64 @@
+<div class="top-bar">
+  <div class="wide-limit">
+    <div class="logo"><%= link_to image_tag('logo.png'), :dashboard %></div>
+    <div class="main-menu">
+      <div class="menu-item <%= 'active' if @top_menu_item == :dashboard %>">
+        <%= link_to 'Dashboard', :admin_dashboard %>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :listings %>">
+        <%= link_to 'Listings', :admin_listings %>
+        <div class="menu-drop-down">
+          <div class="drop-down-item">
+            <%= link_to 'All Listings', :admin_listings %>
+          </div>
+          <div class="drop-down-item">
+            <%= link_to 'Listing Categories', :admin_item_categories %>
+          </div>
+          <div class="drop-down-item">
+            <%= link_to 'Listing Templates', :admin_listing_templates %>
+          </div>
+        </div>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :inventory %>">
+        <%= link_to 'Inventory', :admin_inventory_items %>
+        <div class="menu-drop-down">
+          <div class="drop-down-item">
+            <%= link_to 'Items', :admin_inventory_items %>
+          </div>
+          <div class="drop-down-item">
+            <%= link_to 'Sources', :admin_item_sources %>
+          </div>
+        </div>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :users %>">
+        <%= link_to 'Users', :admin_users %>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :orders %>">
+        <%= link_to 'Orders', :admin_orders %>
+      </div>
+      <div class="menu-item <%= 'active' if @top_menu_item == :reports %>">
+        <%= link_to 'Reports', '#', :class => 'no-click' %>
+        <div class="menu-drop-down">
+          <div class="drop-down-item">
+            <%= link_to 'Sales', :admin_sales_report %>
+          </div>
+          <div class="drop-down-item">
+            <%= link_to 'Sold Listings', :admin_sold_listings_report %>
+          </div>
+          <div class="drop-down-item">
+            <%= link_to 'Seller Performance', :admin_seller_performance_report %>
+          </div>
+        </div>
+      </div>
+      <!--
+      <div class="menu-item <%= 'active' if @top_menu_item == :settings %>">
+        <%= link_to 'Settings', :admin_settings %>
+      </div>
+      -->
+    </div>
+
+    <%= render :partial => 'layouts/account_box' %>
+
+    <div class="clearfix"></div>
+  </div>
+</div>

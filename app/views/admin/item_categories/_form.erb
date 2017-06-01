@@ -1,0 +1,21 @@
+<%= form_for [:admin, @category] do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :title %>
+      <div class="field">
+        <%= f.text_field :title, :placeholder => 'Category Title', :required => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :parent_category %>
+      <div class="field">
+        <%= f.hidden_field :parent_category_id %>
+        <%= text_field_tag 'parent_category_name', @category.parent_category.try(:title) || 'none', :disabled => true %>
+      </div>
+    </div>
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>

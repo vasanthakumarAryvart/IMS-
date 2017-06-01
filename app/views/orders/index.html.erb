@@ -1,0 +1,35 @@
+<% unless @filter[:ajax] %>
+  <% @page_title = "Orders" %>
+  <% @body_classes << "orders" %>
+
+  <h1>
+    <%= @page_title %>
+    <div class="float-right" style="font-size: 16px; margin-top: 15px;">
+      <%= link_to 'Add Order', '#', :class => 'btn btn-primary', 'data-popup-url' => new_order_path, :style => 'margin-top: -15px;' %>
+      <% if current_user.refreshing_orders? %>
+        Refreshing &nbsp;<i class='fa fa-refresh infinite-spin'></i>
+      <% elsif current_user.orders_refresh_completed_at && current_user.orders_refresh_completed_at > 5.minutes.ago %>
+        Refreshed <%= distance_of_time_in_words_to_now(current_user.orders_refresh_completed_at) %> ago
+      <% else %>
+        <%= link_to 'Refresh', '?refresh', :class => 'btn btn-primary', :style => 'margin-top: -15px;' %>
+      <% end %>
+    </div>
+  </h1>           
+
+  <div class="light-container">
+    <form id="orders-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= orders_path %>">
+      <%= hidden_field_tag 'filter[ajax]', true %>
+      Filters
+      <%= wrap_select select_tag 'filter[marketplace]', options_for_select(Marketplace.all.map(&:name), @filter[:marketplace]), :prompt => 'Marketplace' %>
+      <%= wrap_select select_tag 'filter[status]', options_for_select(Order::STATUSES.map(&:capitalize), @filter[:status]), :prompt => 'Order Status' %>
+      <%= wrap_date_field text_field_tag 'filter[date_from]', @filter[:date_from], :placeholder => 'Date From', :class => 'date-field' %>
+      <%= wrap_date_field text_field_tag 'filter[date_to]', @filter[:date_to], :placeholder => 'Date To', :class => 'date-field' %>
+    </form>
+
+    <div id="filtered-content">
+      <center><i class='fa fa-refresh infinite-spin'></i></center>
+    </div>
+  </div>
+<% else %>
+  <%= render :partial => 'orders', :locals => { :orders => @orders } %>
+<% end %>

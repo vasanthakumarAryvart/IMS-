@@ -1,0 +1,65 @@
+<%= will_paginate @items, :class => 'pagination ajax-filter-pagination' %>
+
+<table class="strip-table centered-table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th class="text-left">Make & Model</th>
+    <th style="width: 80px">Category</th>
+    <th style="width: 80px">Source</th>
+    <th>Status</th>
+    <th>Location</th>
+    <th>ACQ</th>
+    <th style="width: 32px">PS %</th>
+    <th>Qty</th>
+    <th title="Listings">List.</th>
+    <th title="Listing Template?">Tmpl.</th>
+  </tr>
+  </thead>
+  <% if @items.any? %>
+    <tbody>
+    <% @items.each { |item| %>
+      <tr>
+        <td>#<%= item.id %></td>
+        <td class="text-left">
+          <%= item.title %>
+          <div class="record-actions on-parent-hover">
+            <%= link_to '#', :title => 'Edit', 'data-popup-url' => edit_admin_inventory_item_path(item), 'data-popup-width' => 610 do %>
+              <i class="fa fa-pencil"></i>
+            <% end %>
+            <%= link_to admin_inventory_item_path(item),
+                        'data-confirm' => 'Are you sure?',
+                        :method => 'delete',
+                        :title => 'Delete' do %>
+              <i class="fa fa-trash"></i>
+            <% end %>
+          </div>
+        </td>
+        <td><%= item.item_category.title %></td>
+        <td><%= item.item_source.try(:name) %></td>
+        <td><%= item.status %></td>
+        <td><%= item.location %></td>
+        <td><%= number_to_currency item.acquisition_cost %></td>
+        <td><%= item.cached_profit_share_percent %></td>
+        <td><%= item.quantity %></td>
+        <td><%= item.listings.count %></td>
+        <td class="actions">
+          <% if item.listing_template %>
+            <%= link_to 'view', admin_listing_template_path(item.listing_template), :class => 'green' %>
+          <% else %>
+            <%= link_to 'add', new_admin_listing_template_path(:inventory_item_id => item.id), :class => 'red' %>
+          <% end %>
+        </td>
+      </tr>
+    <% } %>
+    </tbody>
+  <% else %>
+    <tr>
+      <td colspan="8">
+        <center>No inventory items</center>
+      </td>
+    </tr>
+  <% end %>
+</table>
+
+<%= will_paginate @items, :class => 'pagination ajax-filter-pagination' %>

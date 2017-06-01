@@ -1,0 +1,17 @@
+<table class="strip-table sortable">
+  <tr>
+    <th style="width:20px">ID</th>
+    <th>Name</th>
+    <th style="width:100px">Signed Up On</th>
+  </tr>
+  <% users.each { |user| %>
+    <tr>
+      <td class="text-center"><%= user.id %></td>
+      <td>
+        <%= user.full_name %>
+        <div style="font-size:12px"><%= mail_to user.email %></div>
+      </td>
+      <td class="text-center"><%= l user.created_at, :format => :short %></td>
+    </tr>
+  <% } %>
+</table>

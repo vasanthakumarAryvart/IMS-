@@ -1,0 +1,11 @@
+<% @page_title = "Notifications" %>
+<% @body_classes << "settings notifications" %>
+
+<h1>
+  <%= back_btn %>
+  Notifications
+</h1>
+
+<div class="light-container">
+  <%= render :partial => 'notifications', :locals => { :notifications => @notifications } %>
+</div>

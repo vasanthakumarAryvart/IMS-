@@ -1,0 +1,88 @@
+@import 'includes';
+
+.settings {
+  .user-settings {
+    .input-form {
+      overflow: hidden;
+      max-width: 600px;
+    }
+    .edit-image {
+      float: right;
+      width: 160px;
+      margin: 10px 0px;
+      text-align: center;
+      .user-logo {
+        width: 128px;
+        height: 128px;
+        border-radius: 128px 128px;
+        margin-bottom: 10px;
+      }
+      input {
+        width: 160px;
+      }
+    }
+  }
+  .notifications-list {
+    .notification {
+      color: white;
+      a {
+        color: white;
+      }
+      &.viewed {
+        color: $theme_text;
+        a {
+          color: $theme_text;
+        }
+      }
+    }
+  }
+  .connected-accounts {
+    .account-item {
+      margin-bottom: 2px;
+      .caption {
+        font-size: 18px;
+        padding: 5px 0px;
+        overflow: hidden;
+        span {
+          font-weight: 600;
+          font-size: 16px;
+        }
+        span, a {
+          display: inline-block;
+          margin: 0px 10px;
+        }
+        a {
+          font-size: 13px;
+        }
+      }
+    }
+  }
+
+  .manage-sale-events {
+    width: 525px !important;
+    .choose-category {
+      .select-wrapper {
+        overflow: hidden;
+        width: auto;
+        display: block;
+      }
+      .add-category {
+        float: right;
+        width: 100px;
+        margin-left: 10px;
+      }
+    }
+    .row {
+      .field {
+        input {
+          width: 85px;
+          text-align: center;
+        }
+        .date-field {
+          width: 125px;
+          text-align: center;
+        }
+      }
+    }
+  }
+}

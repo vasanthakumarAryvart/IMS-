@@ -1,0 +1,135 @@
+@import 'includes';
+
+.member-view {
+  body {
+    background: $theme_dark;
+  }
+
+  .top-bar {
+    background: $theme_light;
+    .logo {
+      float: left;
+      img {
+        max-height: 39px;
+        width: 140px;
+        margin-top: 5px;
+        margin-right: 10px;
+      }
+    }
+    .main-menu {
+      float: left;
+      .menu-item {
+        float: left;
+        text-transform: uppercase;
+        cursor: pointer;
+        position: relative;
+        padding: 15px 20px;
+        line-height: 19px;
+        a {
+          text-decoration: none;
+          //padding: 15px 25px;
+          display: block;
+        }
+        .menu-drop-down {
+          display: none;
+          width: 175px;
+          top: 49px;
+          left: 0px;
+          background: $theme_lighter;
+          a {
+            text-transform: none;
+            padding: 7px 25px;
+            &:hover {
+              background: $theme_lighter_2 //rgba(255,255,255,0.05);
+            }
+          }
+        }
+        &.active {
+          background: $theme_lighter;
+        }
+        &:hover {
+          background: $theme_lighter;
+          .menu-drop-down {
+            display: block;
+            position: absolute;
+            z-index: 100;
+          }
+        }
+      }
+    }
+    .account-box {
+      float: right;
+      .account-name {
+        a {
+          text-transform: none;
+          display: inline-block;
+          .user-logo {
+            height: 30px;
+            border-radius: 100px 100px;
+            vertical-align: middle;
+            margin-left: 10px;
+          }
+          &.notifications-link {
+            margin-right: 10px;
+          }
+        }
+      }
+      .menu-item {
+        padding: 9px 25px;
+        padding-bottom: 10px;
+      }
+      .menu-drop-down {
+        text-align: right;
+        right: 0px;
+        left: auto !important;
+        width: 200px !important;
+      }
+    }
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+h1 {
+  .btn-back {
+    background: $theme_light;
+    color: #ccc;
+    padding: 6px 20px;
+    padding-bottom: 7px;
+    padding-right: 15px;
+    border-top-left-radius: 100px;
+    border-bottom-left-radius: 100px;
+    margin-right: 15px;
+    display: inline-block;
+    vertical-align: middle;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: normal;
+    &:hover {
+      background: $theme_lighter;
+      text-decoration: none;
+    }
+  }
+}
+
+.light-container {
+  background: $theme_light;
+  padding: 15px 20px;
+  margin: 10px 0px;
+}
+
+.no-v-margin {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.no-h-margin {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+.no-margin {
+  margin: 0px 0px;
+}

@@ -1,0 +1,28 @@
+<div class="text-left">
+  <h3 class="white text-center">Inventory Item Details</h3>
+  <div class="light-container data-fields">
+    <div>
+      Make <span class="float-right white"><%= item.make %></span>
+    </div>
+    <div>
+      Model <span class="float-right white"><%= item.model %></span>
+    </div>
+    <div>
+      Serial <span class="float-right white"><%= item.serial %></span>
+    </div>
+    <div>
+      ICN <span class="float-right white"><%= item.icc %></span>
+    </div>
+    <div>
+      Notes <span class="float-right white text-right" style="max-width: 200px"><%= item.notes %></span>
+      <div class="clearfix"></div>
+    </div>
+    <div class="text-center white">Additional Details</div>
+    <% item.details.values.each { |v| %>
+      <div>
+        <%= v['name'] %>
+        <span class="float-right white"><%= v['value'] %></span>
+      </div>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<div class="light-container manage-sale-events" style="display: none;" data-popup-box="account-sale-events-<%= account.id %>">
+  <h1>Manage Sale Events</h1>
+
+  <div class="input-form">
+    <div class="row choose-category">
+      <%= link_to 'Add', '#', :class => 'btn add-category' %>
+      <%= wrap_select select_tag 'add_category', options_for_select(ItemCategory.order(:title).map { |c| [c.title, c.id] }), :prompt => 'Choose Category...' %>
+    </div>
+    <%= form_for account do |f| %>
+        <%= f.fields_for :sale_events do |ff| %>
+            <% if ff.object %>
+                <div class="row sale-category">
+                  <label>
+                    <%= ff.object.item_category.title %>
+                    <%= link_to '#', :class => 'remove' do %>
+                        <i class="fa fa-trash"></i>
+                    <% end %>
+                  </label>
+
+                  <div class="field">
+                    <%= ff.text_field :start_date, :value => ff.object.start_date.try(:to_date), :placeholder => 'Date From', :class => 'date-field' %>
+                    <%= ff.text_field :end_date, :value => ff.object.end_date.try(:to_date), :placeholder => 'Date To', :class => 'date-field' %>
+                    <%= ff.number_field :discount_percent, :placeholder => 'Dsc.', :min => 0, :class => '', :step => 0.01 %> &nbsp; %
+                    <%= ff.hidden_field :_destroy, :value => 1, :disabled => true, :class => 'destroy-field', :required => true %>
+                  </div>
+                </div>
+            <% end %>
+        <% end %>
+        <div class="row actions">
+          <%= f.submit 'Save', :class => 'btn btn-primary' %>
+          <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+        </div>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/x-mustache-template" id="sale-event-template">
+  <div class="row sale-category new">
+    <input value="{{category_id}}" type="hidden" name="account[sale_events_attributes][{{uid}}][item_category_id]">
+    <label>
+      {{category_title}}
+      <a class="remove" href="#"><i class="fa fa-trash"></i></a>
+    </label>
+
+    <div class="field">
+      <input value="" placeholder="Date From" class="date-field" type="text" name="account[sale_events_attributes][{{uid}}][start_date]">
+      <input value="" placeholder="Date To" class="date-field" type="text" name="account[sale_events_attributes][{{uid}}][end_date]">
+      <input placeholder="Dsc." min="0" type="number" value="" name="account[sale_events_attributes][{{uid}}][discount_percent]" required>
+      &nbsp; %
+    </div>
+  </div>
+</script>

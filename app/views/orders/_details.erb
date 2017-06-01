@@ -1,0 +1,241 @@
+<% shipping = order.order_shipping_detail %>
+<table class="order-details-container">
+  <tr>
+    <td style="width: 33%">
+      <div class="caption">Order Summary</div>
+      <table class="right-left">
+        <tr>
+          <td>Order ID</td>
+          <td><%= order.uid %></td>
+        </tr>
+        <tr>
+          <td>Status</td>
+          <td><%= order.status.to_s.humanize %></td>
+        </tr>
+        <% if order.cancelled? %>
+          <% if order.cancelled_at %>
+            <tr>
+              <td>Cancelled At</td>
+              <td><%= l order.cancelled_at, :format => :long %></td>
+            </tr>
+          <% end %>
+          <tr>
+            <td>Cancel Reason</td>
+            <td><%= order.cancel_reason %></td>
+          </tr>
+        <% end %>
+        <% if order.paid_at %>
+          <tr>
+            <td>Paid At</td>
+            <td><%= l order.paid_at, :format => :long %></td>
+          </tr>
+        <% end %>
+        <% if order.payment_method %>
+          <tr>
+            <td>Payment Method</td>
+            <td><%= order.payment_method %></td>
+          </tr>
+        <% end %>
+        <% if order.refunded_at %>
+          <tr>
+            <td>Refunded At</td>
+            <td><%= l order.refunded, :format => :long %></td>
+          </tr>
+        <% end %>
+        <% if order.sub_total %>
+          <tr>
+            <td>Subtotal</td>
+            <td><%= number_to_currency order.sub_total %></td>
+          </tr>
+        <% end %>
+        <% if order.tax %>
+          <tr>
+            <td>Tax</td>
+            <td><%= number_to_currency order.tax %></td>
+          </tr>
+        <% end %>
+        <% if shipping.try(:price) %>
+          <tr>
+            <td>Shipping</td>
+            <td><%= number_to_currency shipping.price %></td>
+          </tr>
+        <% end %>
+        <% if order.discount %>
+          <tr>
+            <td>Discount</td>
+            <td><%= number_to_currency order.discount %></td>
+          </tr>
+        <% end %>
+        <tr class="bottom-line">
+          <td>Grand Total</td>
+          <td class="white"><%= number_to_currency order.grand_total %></td>
+        </tr>
+      </table>
+    </td>
+    <td style="width: 33%">
+      <div class="caption">Buyer Details</div>
+      <% if buyer = order.buyer %>
+        <table class="right-left">
+          <tr>
+            <td>Buyer ID</td>
+            <td><%= buyer.uid %></td>
+          </tr>
+          <tr>
+            <td>Name</td>
+            <td><%= buyer.name %></td>
+          </tr>
+          <tr>
+            <td>Email</td>
+            <td><%= mail_to buyer.email if buyer.email %></td>
+          </tr>
+          <tr>
+            <td>Phone Number</td>
+            <td><%= buyer.phone_number %></td>
+          </tr>
+        </table>
+      <% end %>
+    </td>
+    <td>
+      <div class="caption">Shipping Info</div>
+      <% if shipping %>
+        <table class="right-left">
+          <% if shipping.price %>
+            <tr>
+              <td>Shipping Paid</td>
+              <td><%= number_to_currency shipping.price %></td>
+            </tr>
+          <% end %>
+          <% if shipping.real_price %>
+            <tr>
+              <td>Shipping Cost</td>
+              <td><%= number_to_currency shipping.real_price %></td>
+            </tr>
+          <% end %>
+          <tr>
+            <td>Receiver</td>
+            <td><%= shipping.name %></td>
+          </tr>
+          <tr>
+            <td>Address</td>
+            <td><%= [shipping.country, shipping.city, shipping.state, shipping.postal_code, shipping.address_line_1, shipping.address_line_2].reject(&:blank?).join(', ') %></td>
+          </tr>
+          <tr>
+            <td>Phone</td>
+            <td><%= shipping.phone %></td>
+          </tr>
+          <tr>
+            <td>Tracking</td>
+            <td>
+              <%= shipping.carrier %>
+              <% if shipping.tracking_url %>
+                <%= link_to [shipping.tracking_code, 'Tracking URL'].reject(&:blank?).first, shipping.tracking_url, :target => '_blank' %>
+              <% else %>
+                <%= shipping.tracking_code %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <td>Notes</td>
+            <td><%= shipping.notes %></td>
+          </tr>
+        </table>
+      <% end %>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="caption">Order Items</div>
+      <table class="right-left">
+        <tr>
+          <th class="text-left">Item</th>
+          <th style="width: 70px">Item Price</th>
+          <th style="width: 50px">Qty.</th>
+          <th style="width: 70px">Price</th>
+        </tr>
+        <%
+          quantity = 0
+          total = 0
+        %>
+        <% order.order_items.each { |ol| %>
+          <%
+            quantity += ol.quantity
+            total += ol.total
+          %>
+          <tr>
+            <td>
+              <% if ol.has_listing? %>
+                <%= link_to ol.listing.title, listing_path(ol.listing) %>
+              <% elsif ol.inventory_item %>
+                #<%= ol.inventory_item.id %> <%= ol.inventory_item.title %>
+                <%= link_to order_order_item_path(order, ol),
+                            :method => 'delete',
+                            :class => 'delete-order-item',
+                            'data-confirm' => 'Are you sure?' do %>
+                  <i class="fa fa-trash"></i>
+                <% end if order.manual? %>
+              <% else %>
+                <span class="grey">unknown</span>
+              <% end %>
+            </td>
+            <td class="text-center"><%= number_to_currency ol.item_price %></td>
+            <td class="text-center"><%= ol.quantity %></td>
+            <td class="text-center"><%= number_to_currency ol.total %></td>
+          </tr>
+        <% } %>
+        <tr class="bottom-line">
+          <th class="text-left" colspan="2">TOTAL:</th>
+          <th class="text-center"><%= quantity %></th>
+          <th class="text-center"><%= number_to_currency total %></th>
+        </tr>
+      </table>
+      <div class="text-left">
+        <%= link_to 'Add', '#', :class => 'btn btn-primary btn-small', 'data-popup-url' => new_order_order_item_path(order) if order.manual? %>
+      </div>
+    </td>
+    <td>
+      <div class="caption">Other</div>
+      <table class="right-left">
+        <% if order.marketplace_fee %>
+          <tr>
+            <td>Marketplace Fee</td>
+            <td><%= number_to_currency order.marketplace_fee %></td>
+          </tr>
+        <% end %>
+        <% if order.processing_fee %>
+          <tr>
+            <td>Processing Fee</td>
+            <td><%= number_to_currency order.processing_fee %></td>
+          </tr>
+        <% end %>
+        <tr>
+          <td>Acquisition Cost</td>
+          <td><%= number_to_currency order.acquisition_cost %></td>
+        </tr>
+        <tr>
+          <td>Profit Share Deductions</td>
+          <td><%= number_to_currency order.profit_share_deductions %></td>
+        </tr>
+        <tr>
+          <td>Net</td>
+          <td><%= number_to_currency order.net_profit %></td>
+        </tr>
+      </table>
+      <% if order.manual? %>
+        <div class="text-left">
+          <%= link_to 'Edit', '#', :class => 'btn btn-primary btn-small', 'data-popup-url' => edit_order_path(order) %>
+          <%= link_to 'Delete', order_path(order), :class => 'btn btn-primary btn-small', 'data-confirm' => 'Are you sure?', :method => :delete %>
+        </div>
+      <% end %>
+    </td>
+  </tr>
+</table>
+
+<script>
+  $('.delete-order-item').unbind('click').click(function () {
+    if (confirm('Are you sure?'))
+      $.post(this.href, {'_method': 'delete'}).success(function (data) {
+        $('.order-details:visible td:first').html(data);
+      })
+    return false;
+  })
+</script>

@@ -1,0 +1,82 @@
+<% account = f.object.account %>
+<div class="light-container listing-pricing-form" style="display: none; width: 475px" data-popup-box="listing-pricing-<%= account.id %>" <%= 'data-init="setup_pricing_editors_for_ebay_auction(this);"'.html_safe if account.marketplace.ebay? %>>
+  <h1>Manage <%= account.marketplace.name %> Pricing</h1>
+
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :pricing_type %>
+      <div class="field">
+        <%= wrap_select f.select :pricing_type, AccountListing::PRICING_TYPES.map { |t| [t.humanize.capitalize, t] }, { :prompt => 'Choose...' }, { :class => 'pricing-type', :required => false } %>
+      </div>
+    </div>
+
+    <div class="row" data-pricing-type="fixed">
+      <%= f.label :price %>
+      <div class="field">
+        <%= f.number_field :price, :placeholder => '0.00', :min => 0, :step => 0.01, :required => false, :step => 0.01 %>
+        USD
+      </div>
+    </div>
+
+    <div class="row" data-pricing-type="auction">
+      <%= f.label :price, 'Starting Price' %>
+      <div class="field">
+        <%= f.number_field :price, :placeholder => '0.00', :min => 0, :step => 0.01, :required => false, :step => 0.01 %>
+        USD
+      </div>
+    </div>
+
+    <div class="row" data-pricing-type="formula">
+      <%= f.label :min_price %>
+      <div class="field">
+        <%= f.number_field :min_price, :placeholder => '0.00', :min => 0, :step => 0.01 %> USD
+      </div>
+    </div>
+    <div class="row" data-pricing-type="formula">
+      <%= f.label :formula %>
+      <div class="field">
+        <%= f.text_field :formula, :placeholder => 'e.g. Cost * 1.5 or Cost + 10 etc.', :required => false %>
+        <div class="hint">
+          Allowed variables: Cost, MinPrice, ShippingPrice
+        </div>
+      </div>
+    </div>
+
+    <div class="row" data-pricing-type="market_highest">
+      <label></label>
+
+      <div class="field">
+        <%= variable_pricing_box "listing[account_listing][#{f.object.id || f.index}]", 'relative_price', f.object.relative_price, false %>
+      </div>
+    </div>
+    <div class="row" data-pricing-type="market_highest">
+      <%= f.label :min_price %>
+      <div class="field">
+        <%= f.number_field :min_price, :placeholder => '0.00', :min => 0, :step => 0.01 %> USD
+      </div>
+    </div>
+
+    <div class="row" data-pricing-type="market_lowest">
+      <label></label>
+
+      <div class="field">
+        <%= variable_pricing_box "listing[account_listing][#{f.object.id || f.index}]", 'relative_price', f.object.relative_price, false %>
+      </div>
+    </div>
+    <div class="row" data-pricing-type="market_lowest">
+      <%= f.label :min_price %>
+      <div class="field">
+        <%= f.number_field :min_price, :placeholder => '0.00', :min => 0, :step => 0.01 %> USD
+      </div>
+    </div>
+
+    <div class="row actions">
+      <%= link_to 'Done', '#', :class => 'btn popup-close' %>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $('.listing-pricing-form[data-popup-box="listing-pricing-<%= account.id %>"] select.pricing-type').change();
+      });
+    </script>
+  </div>
+</div>

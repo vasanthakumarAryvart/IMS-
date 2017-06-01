@@ -1,0 +1,95 @@
+<% @page_title = "User Settings" %>
+<% @body_classes << "settings" %>
+
+<h1>
+  <%= back_btn %>
+  User Settings
+</h1>
+
+<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, :class => 'light-container user-settings' }) do |f| %>
+    <div class="edit-image">
+      <%= image_tag resource.image.url(:medium), :class => 'user-logo' %>
+
+      <div>
+        <%= link_to 'change', '#', :onclick => '$(this).next().show().prev().remove(); return false;' %>
+        <%= f.file_field :image, accept: 'image/png,image/gif,image/jpeg', :style => 'display: none' %>
+      </div>
+    </div>
+
+    <div class="input-form">
+      <%= devise_error_messages! %>
+
+      <div class="row">
+        <%= f.label :email %>
+        <div class="field">
+          <%= f.email_field :email, :disabled => true %>
+        </div>
+      </div>
+
+      <div class="row">
+        <%= f.label :first_name %>
+        <div class="field">
+          <%= f.text_field :first_name, :required => true %>
+        </div>
+      </div>
+
+      <div class="row">
+        <%= f.label :last_name %>
+        <div class="field">
+          <%= f.text_field :last_name, :required => true %>
+        </div>
+      </div>
+
+      <div class="row">
+        <%= f.label :company_name, 'Company' %>
+        <div class="field">
+          <%= f.text_field :company_name, :placeholder => 'optional' %>
+        </div>
+      </div>
+
+      <div class="row">
+        <%= f.label :phone_number %>
+        <div class="field">
+          <%= f.text_field :phone_number, :placeholder => 'optional' %>
+        </div>
+      </div>
+
+      <div class="row change-password" style="display: none">
+        <%= f.label :password, 'New password' %>
+        <div class="field">
+          <%= f.password_field :password, autocomplete: "off" %>
+        </div>
+      </div>
+
+      <div class="row change-password" style="display: none">
+        <%= f.label :password_confirmation, 'Confirm password' %>
+        <div class="field">
+          <%= f.password_field :password_confirmation, autocomplete: "off" %>
+        </div>
+      </div>
+
+      <div class="row">
+        <%= f.label :current_password %>
+        <div class="field">
+          <%= f.password_field :current_password, autocomplete: "off", :required => true, :placeholder => 'to confirm your changes' %>
+        </div>
+      </div>
+
+      <div class="row">
+        <label></label>
+
+        <div class="field">
+          <%= link_to 'Change Password', '#', :onclick => '$(".change-password").show(); $(this).parents(".row").remove(); return false;' %>
+        </div>
+      </div>
+
+      <div class="actions row">
+        <label></label>
+
+        <div class="field">
+          <%= f.submit "Save", :class => 'btn btn-primary' %>
+          <%= link_to "Cancel", '', :class => 'btn' %>
+        </div>
+      </div>
+    </div>
+<% end %>

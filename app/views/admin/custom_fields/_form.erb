@@ -1,0 +1,88 @@
+<%= form_for [:admin, @category, @custom_field] do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :name %>
+      <div class="field">
+        <%= f.text_field :name, :placeholder => 'Custom Field Name', :required => true, :disabled => @custom_field.default_field? %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :hint %>
+      <div class="field">
+        <%= f.text_field :hint, :placeholder => 'Will be shown in field placeholder' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :field_type, 'Field Type' %>
+      <div class="field">
+        <%= wrap_select f.select :field_type, CustomField::FIELD_TYPES, { :prompt => 'Choose Type...', :include_blank => true }, { :disabled => @custom_field.default_field? } %>
+        <div class="hint">Required when Set per marketplace unchecked</div>
+        <div class="hint">Ignored when Set per marketplace checked</div>
+      </div>
+    </div>
+    <div class="field-options row" style="<%= 'display: none' unless @custom_field.field_type == 'enum' %>">
+      <%= f.label :field_options, 'Field Options' %>
+      <div class="string-list-input">
+        <div class="string-list-items">
+          <% @custom_field.field_options.each { |option| %>
+            <div>
+              <%= text_field_tag 'custom_field[field_options][]', option, :placeholder => 'Option' %>
+              <a href="#" class="red remove">remove</a>
+            </div>
+          <% } if @custom_field.field_options.is_a?(Array) %>
+        </div>
+        <a href="#" class="add-item">Add Option</a>
+        <script type="text/x-handlebars-template" class="item-template">
+          <div>
+            <%= text_field_tag 'custom_field[field_options][]', '', :placeholder => 'Option' %>
+            <a href="#" class="red remove">remove</a>
+          </div>
+        </script>
+      </div>
+    </div>
+    <div class="array-field-type row" style="<%= 'display: none' unless @custom_field.field_type == 'array' %>">
+      <%= f.label :field_options, 'Array of Type' %>
+      <div class="field">
+        <%= wrap_select f.select :field_subtype, CustomField::ARRAY_FIELD_TYPES, { :prompt => "Choose..." }, { :required => true, :disabled => @custom_field.field_type != 'array' } %>
+      </div>
+    </div>
+    <div class="row text-row">
+      <%= f.label :hidden, 'Hidden' %>
+      <div class="field">
+        <%= f.check_box :hidden, :disabled => @custom_field.default_field? %>
+        <span class="gray">should be hidden? (for system fields)</span>
+      </div>
+    </div>
+    <div class="row text-row">
+      <%= f.label :not_for_template, 'Not for template' %>
+      <div class="field">
+        <%= f.check_box :not_for_template, :disabled => @custom_field.default_field? %>
+        <span class="gray">should be hidden for template setup?</span>
+      </div>
+    </div>
+    <div class="row text-row">
+      <%= f.label :set_per_marketplace, 'Set per marketplace' %>
+      <div class="field">
+        <%= f.check_box :set_per_marketplace, :disabled => @custom_field.default_field? || !@custom_field.set_per_marketplace_editable? %>
+        <span class="gray">should be set differently per each marketplace?</span>
+      </div>
+    </div>
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  $('#custom_field_field_type').change(function () {
+    $('.row.field-options').toggle($(this).val() == 'enum');
+    $('.row.array-field-type').toggle($(this).val() == 'array');
+    if ($(this).val() != 'enum')
+      $('.row.field-options .string-list-items').html('');
+    if ($(this).val() == 'array')
+      $('.row.array-field-type select').removeAttr('disabled');
+    else
+      $('.row.array-field-type select').attr('disabled', 'disabled');
+  })
+</script>

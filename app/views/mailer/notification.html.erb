@@ -1,0 +1,12 @@
+Hi, <%= @notification.user.first_name %><br/>
+<br/>
+You've got a new notification:<br/>
+<br/>
+
+<b><%= link_to @notification.title, @notification.link %></b><br/>
+<%= @notification.content %><br/>
+<br/>
+<%= link_to 'View Notification', @notification.link %><br/>
+<br/>
+Best wishes,<br/>
+Clarabyte Team

@@ -1,0 +1,25 @@
+<% unless @filter[:ajax] %>
+  <% @page_title = "Seller Performance" %>
+  <% @body_classes << "reports" %>
+
+  <h1>
+    <%= @page_title %>
+  </h1>
+
+  <div class="light-container">
+    <form id="orders-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= admin_seller_performance_report_path %>">
+      <%= hidden_field_tag 'filter[ajax]', true %>
+      Performance metrics for period
+      <%= wrap_date_field text_field_tag 'filter[date_from]', @filter[:date_from] || 30.days.ago.to_date, :placeholder => 'Date From', :class => 'date-field' %>
+      <%= wrap_date_field text_field_tag 'filter[date_to]', @filter[:date_to] || Date.today, :placeholder => 'Date To', :class => 'date-field' %>
+
+      <div class="float-right">
+        <%= text_field_tag 'filter[keyword]', @filter[:keyword], :placeholder => 'Search Sellers', :style => 'width: 170px' %>
+      </div>
+    </form>
+
+    <div id="filtered-content"></div>
+  </div>
+<% else %>
+  <%= render :partial => 'performance', :locals => { :stats => @stats } %>
+<% end %>

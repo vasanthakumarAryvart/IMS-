@@ -1,0 +1,29 @@
+@import 'includes';
+
+.non-member-view {
+  background: $theme_dark;
+  .devise-form-box {
+    max-width: 350px;
+    padding: 20px 30px;
+    background: $theme_light;
+    margin: 0px auto;
+    top: 80px;
+    position: relative;
+    box-shadow: 0px 0px 40px rgba(0, 0, 0, 0.5);
+    h2 {
+      text-align: center;
+      font-size: 30px;
+      font-weight: 600;
+      color: $theme_text;
+      margin: 0px 0px;
+      margin-bottom: 15px;
+      text-transform: capitalize;
+    }
+    .field {
+      margin-bottom: 5px;
+    }
+    .actions {
+      margin-bottom: 10px;
+    }
+  }
+}

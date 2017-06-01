@@ -1,0 +1,2 @@
+module WarehousePinsHelper
+end

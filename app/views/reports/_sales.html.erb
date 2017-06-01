@@ -1,0 +1,135 @@
+<div id="sales-chart" class="generic-chart"></div>
+
+<table class="strip-table centered-table sortable">
+  <thead>
+  <tr>
+    <th style="width: 200px">Period</th>
+    <th>Orders Count</th>
+    <th>Avg Order $</th>
+    <th>Revenue $</th>
+    <% if groups.first[:profit_share] %>
+      <th>Profit Share $</th>
+    <% end %>
+    <th>Net Profit $</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% groups.each { |group| %>
+    <tr>
+      <td><%= group[:title] %></td>
+      <td><%= group[:count] %></td>
+      <td><%= number_to_currency group[:avg_order] %></td>
+      <td><%= number_to_currency group[:revenue] %></td>
+      <% if group[:profit_share] %>
+        <td><%= number_to_currency group[:profit_share] %></td>
+      <% end %>
+      <td><%= number_to_currency group[:net] %></td>
+    </tr>
+  <% } %>
+  </tbody>
+  <tfoot>
+  <tr>
+    <td>TOTAL</td>
+    <td><%= groups.map { |g| g[:count] }.inject(&:+) %></td>
+    <td><%= number_to_currency groups.empty? ? 0 : groups.map { |g| g[:revenue] }.inject(&:+) / groups.map { |g| g[:count] }.inject(&:+) || 0 %></td>
+    <td><%= number_to_currency groups.map { |g| g[:revenue] }.inject(&:+) || 0 %></td>
+    <% if groups.first[:profit_share] %>
+      <td><%= number_to_currency groups.map { |g| g[:profit_share] }.inject(&:+) || 0 %></td>
+    <% end %>
+    <td><%= number_to_currency groups.map { |g| g[:net] }.inject(&:+) || 0 %></td>
+  </tr>
+  </tfoot>
+</table>
+
+<% groups = groups.reverse %>
+<script>
+  $(function () {
+    new Highcharts.Chart({
+      chart: {
+        renderTo: 'sales-chart',
+        backgroundColor: 'transparent',
+        style: {
+          color: "#eee"
+        }
+      },
+      title: {text: null},
+      xAxis: {
+        type: 'linear',
+        categories: <%= groups.map {|g| g[:title] }.to_json.html_safe %>,
+        labels: {
+          style: {
+            color: '#eee'
+          }
+        }
+      },
+      yAxis: [{
+        title: {
+          text: 'Revenue',
+          style: {
+            color: '#eee'
+          }
+        },
+        labels: {
+          format: "${value}",
+          style: {
+            color: '#eee'
+          }
+        },
+        gridLineColor: '#787d8e'
+      },
+        {
+          title: {
+            text: 'Count',
+            style: {
+              color: '#eee'
+            }
+          },
+          opposite: true,
+          labels: {
+            style: {
+              color: '#eee'
+            }
+          },
+          gridLineColor: '#787d8e'
+        }
+      ],
+      series: [{
+        type: 'area',
+        data: <%= groups.map {|g| g[:revenue].to_f }.to_json.html_safe %>,
+        name: 'Revenue',
+        tooltip: {
+          valuePrefix: '$'
+        }
+      },
+        {
+          type: 'area',
+          data: <%= groups.map {|g| g[:net].to_f }.to_json.html_safe %>,
+          name: 'Net',
+          color: 'lightgreen',
+          tooltip: {
+            valuePrefix: '$'
+          }
+        },
+        <% if groups.first[:profit_share] %>
+        {
+          type: 'area',
+          data: <%= groups.map {|g| g[:profit_share].to_f }.to_json.html_safe %>,
+          name: 'Profit Share',
+          color: 'indianred',
+          tooltip: {
+            valuePrefix: '$'
+          }
+        },
+        <% end %>
+        {
+          data: <%= groups.map {|g| g[:count].to_i }.to_json.html_safe %>,
+          name: 'Count',
+          yAxis: 1,
+          color: 'orange'
+        }],
+      legend: {
+        itemStyle: {'color': '#eee'}
+      }
+    });
+  });
+</script>

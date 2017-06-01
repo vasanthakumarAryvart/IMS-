@@ -1,0 +1,36 @@
+<div class="account-box main-menu">
+  <div class="menu-item <%= 'active' if @top_menu_item == :settings %>">
+    <div class="account-name">
+      <%= link_to :notifications, :class => 'notifications-link' do %>
+        <i class="fa fa-bell-o"></i>
+      <% end %>
+      <%= link_to :edit_user_registration do %>
+        <%= current_user.full_name %>
+        <%= image_tag current_user.image.url(:thumb), :class => 'user-logo' %>
+      <% end %>
+    </div>
+    <div class="menu-drop-down">
+      <div class="drop-down-item">
+        <%= link_to 'Settings', :edit_user_registration %>
+      </div>
+      <div class="drop-down-item">
+        <%= link_to 'Notifications', :notifications %>
+      </div>
+      <div class="drop-down-item">
+        <%= link_to 'Connected Accounts', :connected_accounts %>
+      </div>
+      <% if is_admin? %>
+        <div class="drop-down-item">
+          <% if admin_zone? %>
+            <%= link_to 'Cabinet Dashboard', :dashboard %>
+          <% else %>
+            <%= link_to 'Admin Dashboard', :admin_dashboard %>
+          <% end %>
+        </div>
+      <% end %>
+      <div class="drop-down-item">
+        <%= link_to 'Log Out', destroy_user_session_path, :method => :delete %>
+      </div>
+    </div>
+  </div>
+</div>

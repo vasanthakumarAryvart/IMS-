@@ -1,0 +1,305 @@
+<%= form_for listing do |f| %>
+  <%= f.hidden_field :item_category_id %>
+  <%= f.hidden_field :listing_template_id %>
+  <%= f.hidden_field :inventory_item_id %>
+  <div class="new-listing-container">
+    <div class="images">
+      <%= render 'form_images', f: f %>
+      <%= render :partial => 'inventory_item', :locals => { :item => listing.inventory_item } if listing.inventory_item %>
+    </div>
+    <div class="details">
+      <h3>Item Details</h3>
+
+      <div class="light-container data-fields">
+        <div class="tabs-panel">
+          <div class="tab active" data-group="global">Global</div>
+          <% current_user.enabled_accounts.each { |account| %>
+            <div class="tab" data-group="<%= account.marketplace.name %>"><%= account.marketplace.name %></div>
+          <% } %>
+        </div>
+
+        <div class="input-form">
+          <% listing.data_fields.each { |field| %>
+            <%= f.fields_for :data_fields, field, :child_index => field.id || rand(99999999) do |ff| %>
+              <% data_field = ff.object %>
+              <% custom_field = data_field.custom_field %>
+              <%
+                if data_field.marketplace
+                  field_mapping = custom_field.custom_field_mapping_for(data_field.marketplace)
+                  if field_mapping && field_mapping.marketplace_field_config[:for]
+                    if listing.new_record?
+                      next unless field_mapping.marketplace_field_config[:for].map(&:to_s).include?('create')
+                    else
+                      disabled = !field_mapping.marketplace_field_config[:for].map(&:to_s).include?('update')
+                    end
+                  end
+                end
+              %>
+              <div class="row" data-group="<%= data_field.marketplace.try(:name) || 'global' %>" style="<%= "display: none" if data_field.marketplace %>">
+                <%= ff.hidden_field :custom_field_id %>
+                <%= ff.hidden_field :marketplace_id %>
+                <%= ff.label custom_field.name, :class => ("bold" if custom_field.required?) %>
+                <div class="field">
+                  <% field_type = field_mapping.try(:marketplace_field_type) || custom_field.field_type %>
+                  <% case field_type.try(:to_sym) %>
+                  <% when :string %>
+                    <%
+                      field_options = field_mapping ? field_mapping.marketplace_field_options : custom_field.field_options
+                      suggestions = field_options if field_options.is_a?(Array)
+                      sid = "suggestions-autocomplete-#{rand(999999)}"
+                    %>
+                    <%= ff.text_field :value, :placeholder => custom_field.hint, :required => custom_field.required?, :disabled => disabled, :class => [sid, ("listing-template-suggest" if custom_field.title_field?)].join(" "), 'data-disabled' => disabled || nil %>
+                    <% unless suggestions.blank? %>
+                      <script>
+                        $('.<%= sid %>').autocomplete({
+                          minLength: 0,
+                          matchContains: true,
+                          source: <%= suggestions.to_json.html_safe %>,
+                          focus: function () {
+                            return false;
+                          }
+                        }).focus(function () {
+                          if (!$(this).val())
+                            $(this).autocomplete("search", "");
+                        })
+                      </script>
+                    <% end %>
+                  <% when :text %>
+                    <%= ff.text_area :value, :placeholder => custom_field.hint, :required => custom_field.required?, :disabled => disabled, 'data-disabled' => disabled || nil %>
+                  <% when :int %>
+                    <%= ff.number_field :value, :placeholder => custom_field.hint, :required => custom_field.required?, :disabled => disabled, :step => 1, 'data-disabled' => disabled || nil %>
+                  <% when :float %>
+                    <%= ff.number_field :value, :placeholder => custom_field.hint, :required => custom_field.required?, :disabled => disabled, :step => 0.01, 'data-disabled' => disabled || nil %>
+                  <% when :enum %>
+                    <% field_options = field_mapping.try(:marketplace_field_options) || custom_field.field_options %>
+                    <% select_options = field_options.map { |o|
+                      if o.is_a?(Hash)
+                        [o[:title], o[:key]] if !o[:for] || listing.new_record? && o[:for].map(&:to_s).include?('create') || !listing.new_record? && o[:for].map(&:to_s).include?('update')
+                      else
+                        [o, o]
+                      end
+                    }.compact %>
+                    <%= wrap_select ff.select :value, select_options, { :prompt => 'Choose...', :include_blank => !field_mapping.required? }, { :required => custom_field.required?, :disabled => disabled, 'data-disabled' => disabled || nil } %>
+                    <div class="hint"><%= custom_field.hint %></div>
+                  <% when :bool %>
+                    <%= ff.check_box :value, :disabled => disabled, 'data-disabled' => disabled || nil %>
+                    <span class="grey"><%= custom_field.hint %></span>
+                  <% when :array %>
+                    <% array_of_type = field_mapping.try(:marketplace_field_subtype) || custom_field.field_subtype %>
+                    <% case array_of_type.try(:to_sym) %>
+                  <% when :string %>
+                      <%
+                        field_options = field_mapping ? field_mapping.marketplace_field_options : custom_field.field_options
+                        suggestions = field_options if field_options.is_a?(Array)
+                        sid = "suggestions_autocomplete_#{rand(999999)}"
+                      %>
+                      <div class="string-list-input" <%= "data-max-items=#{field_mapping.marketplace_field_config[:max_items]}" if field_mapping.marketplace_field_config[:max_items] %>>
+                        <div class="string-list-items">
+                          <% (data_field.value.is_a?(Array) ? data_field.value : [data_field.value]).reject(&:blank?).each { |item| %>
+                            <div>
+                              <%= text_field_tag "listing[data_fields_attributes][#{ff.index}][value][]", item, :placeholder => 'Value', :disabled => disabled, 'data-disabled' => disabled || nil, :class => sid %>
+                              <% unless disabled %>
+                                <a href="#" class="red remove">remove</a>
+                              <% end %>
+                            </div>
+                          <% } %>
+                        </div>
+                        <% unless disabled %>
+                          <a href="#" class="add-item" data-sid="<%= sid %>">Add Value</a>
+                        <% end %>
+                        <script type="text/x-handlebars-template" class="item-template">
+                          <div>
+                            <%= text_field_tag "listing[data_fields_attributes][#{ff.index}][value][]", '', :placeholder => 'Value', :class => sid %>
+                            <a href="#" class="red remove">remove</a>
+                          </div>
+                        </script>
+                      </div>
+                      <% unless suggestions.blank? %>
+                        <script>
+                          $('.add-item[data-sid=<%= sid %>]').click(function () {
+                            setTimeout(setup_suggestions_for_<%= sid %>);
+                          });
+                          function setup_suggestions_for_<%= sid %>() {
+                            $('.<%= sid %>').autocomplete({
+                              minLength: 0,
+                              matchContains: true,
+                              source: <%= suggestions.to_json.html_safe %>,
+                              focus: function () {
+                                return false;
+                              }
+                            }).focus(function () {
+                              if (!$(this).val())
+                                $(this).autocomplete("search", "");
+                            })
+                          }
+                          setup_suggestions_for_<%= sid %>();
+                        </script>
+                      <% end %>
+                    <% else %>
+                      <div class="grey" style="padding: 8px 0px;">
+                        field editor not defined for type "array of <%= array_of_type %>"
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="grey" style="padding: 8px 0px;">
+                      field editor not defined for type "<%= field_type %>"
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          <% } %>
+        </div>
+      </div>
+
+      <h3>Publishing and Pricing</h3>
+
+      <div class="light-container">
+        <div class="input-form">
+          <% listing.account_listings.sort_by { |a| (a.account.integration.logged_in? rescue false) ? 0 : 1 }.each { |account_listing| %>
+            <%= f.fields_for :account_listings, account_listing, :child_index => account_listing.id || rand(9999999) do |ff| %>
+              <%= ff.hidden_field :account_id %>
+              <% account = ff.object.account %>
+              <% enabled = (account.integration.logged_in? rescue :not_implemented) != :not_implemented %>
+              <div class="row text-row">
+                <%= ff.label account.title %>
+                <div class="field target-marketplace">
+                  <% if enabled && account.integration.logged_in? %>
+                    <%= wrap_switch ff, :publish, 'data-group' => account.marketplace.name %>
+                    <%= link_to 'Manage Pricing', '#', 'data-open-popup' => "listing-pricing-#{account.id}", 'data-popup-reuse' => true %>
+                    <%= render 'form_pricing', f: ff %>
+                    <%= link_to 'Manage', connected_accounts_path, :class => 'btn btn-small float-right', :target => '_blank' %>
+                  <% elsif enabled %>
+                    <%= wrap_switch ff, :publish, 'data-group' => account.marketplace.name, :disabled => true %>
+                    <span class="grey">Please connect this account first</span>
+                    <%= link_to 'Connect', connect_integration_path(account), :class => 'btn btn-small float-right', :target => '_blank' %>
+                  <% else %>
+                    <%= wrap_switch ff, :publish, 'data-group' => account.marketplace.name, :disabled => true %>
+                    <span class="grey">This marketplace is not functional yet</span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          <% } %>
+
+          <br/>
+
+          <div class="row">
+            <%= f.label :cost %>
+            <div class="field">
+              <%= f.number_field :cost, :placeholder => '0.00', :min => 0, :step => 0.01 %> USD
+              <span class="grey">(may be used for calculations)</span>
+            </div>
+          </div>
+          <div class="row">
+            <%= f.label :publish_on %>
+            <div class="field">
+              <%= wrap_date_field f.text_field :publish_on, :class => 'date-field', :placeholder => 'Now' %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Shipping</h3>
+
+      <div class="light-container">
+        <div class="input-form">
+          <div class="row">
+            <%= f.label "Shipping Preset" %>
+            <div class="field">
+              <%= wrap_select f.select :shipping_preset_id, current_user.shipping_presets.order(:title).map { |p| [p.title_with_details, p.id] }, { :prompt => 'Choose Preset...' }, { :required => true } %>
+            </div>
+          </div>
+          <div class="row">
+            <%= f.label "Item Locations" %>
+            <div class="field">
+              <%= render 'form_placements', form: f %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <%= f.submit 'Save', :class => 'btn btn-primary save-listing' %>
+        <%= link_to 'Cancel', listings_path, :class => 'btn' %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<br/>
+<br/>
+<br/>
+
+<script>
+  $('.new-listing-container .tabs-panel .tab').click(function () {
+    $(this).parents('.data-fields').find('.row[data-group]').hide().filter('[data-group=' + $(this).data('group') + ']').show();
+    $(this).parents('.tabs-panel').find('.tab').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('.new-listing-container .save-listing').click(function () {
+    var form = $('.new-listing-container').parents('form').first();
+    var required_input = form.find('input,select,textarea').filter('[required]:not([disabled])').filter(function (i, el) {
+      return !$(el).val()
+    }).first();
+    if (required_input.length == 1) {
+      var data_group = required_input.parents('[data-group]').data('group');
+      var popup_box = required_input.parents('.popup-box-overlay');
+      if (data_group) {
+        $('.new-listing-container .tabs-panel .tab[data-group=' + data_group + ']').click();
+      }
+      else if (popup_box.length == 1)
+        popup_box.show();
+    }
+  });
+
+  $('.new-listing-container').parents('form').submit(function () {
+    if ($('.images .inputs input').length == 0) {
+      alert('You have to provide at least one image');
+      return false;
+    }
+    return true;
+  });
+
+  function updateCustomFieldsVisibility() {
+    $('.field.target-marketplace .checkbox-switch-wrapper').each(function (i, el) {
+      var group = $(el).data('group');
+      if ($(el).find('input[type=checkbox]')[0].checked) {
+        $('.tabs-panel .tab[data-group=' + group + ']').show();
+        $('.data-fields').find('.row[data-group=' + group + ']').find('input,select,textarea').filter(':not([data-disabled])').removeAttr('disabled');
+      }
+      else {
+        if ($('.tabs-panel .tab[data-group=' + group + ']').hide().hasClass('active'))
+          $('.tabs-panel .tab[data-group=global]').click();
+        $('.data-fields').find('.row[data-group=' + group + ']').find('input,select,textarea').attr('disabled', 'disabled');
+      }
+    })
+  }
+
+  $('.field.target-marketplace input[type=checkbox]').change(function () {
+    updateCustomFieldsVisibility();
+  });
+
+  updateCustomFieldsVisibility();
+
+  <% if listing.new_record? && !listing.listing_template %>
+  $('.listing-template-suggest').autocomplete({
+    source: '<%= suggest_template_listings_path(:item_category_id => listing.item_category_id) %>',
+    minLength: 3,
+    select: function (event, ui) {
+      event.preventDefault();
+      if (confirm("Populate new listing from template '" + ui.item.label + "'?"))
+        window.location = window.location + "&template_id=" + ui.item.value;
+    },
+    focus: function (event) {
+      event.preventDefault();
+    }
+  });
+  <% end %>
+
+  <% if listing.inventory_item %>
+  $('.placements-list select, .placements-list input').attr('disabled', 'disabled');
+  $('.add-placement').remove();
+  <% end %>
+</script>

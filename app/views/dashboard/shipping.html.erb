@@ -1,0 +1,91 @@
+<% @page_title = "Shipping" %>
+
+<div class="shipping-view">
+  <div class="shipping-presets-pane">
+    <h2>
+      Shipping Presets
+      <%= link_to 'Add Preset', '#', :class => 'btn btn-primary btn-medium float-right', 'data-popup-url' => new_shipping_preset_path %>
+    </h2>
+
+    <div class="light-container">
+      <table class="strip-table shipping-presets-list sortable">
+        <tr>
+          <th>Title</th>
+          <th style="width: 100px">Price</th>
+        </tr>
+        <% if current_user.shipping_presets.any? %>
+          <% current_user.shipping_presets.order(:title).each { |preset| %>
+            <tr>
+              <td>
+                <%= preset.title %>
+                <div class="record-actions on-parent-hover">
+                  <%= link_to '#', :title => 'Edit', 'data-popup-url' => edit_shipping_preset_path(preset) do %>
+                    <i class="fa fa-pencil"></i>
+                  <% end %>
+                  <%= link_to shipping_preset_path(preset),
+                              'data-confirm' => 'Are you sure?',
+                              :class => ('disabled' unless preset.can_delete?),
+                              :method => 'delete',
+                              :title => (!preset.can_delete? ? 'This preset is used by some listings. Unassign it in order to delete' : 'Delete') do %>
+                    <i class="fa fa-trash"></i>
+                  <% end %>
+                </div>
+              </td>
+              <td class="text-center"><%= number_to_currency preset.price %></td>
+            </tr>
+          <% } %>
+        <% else %>
+          <tr>
+            <td colspan="2">
+              <center>No shipping presets</center>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    </div>
+  </div>
+
+  <div class="warehouses-pane">
+    <h2>
+      Warehouses
+      <%= link_to 'Add Warehouse', '#', :class => 'btn btn-primary btn-medium float-right', 'data-popup-url' => new_warehouse_path %>
+    </h2>
+
+    <div class="light-container">
+      <table class="strip-table warehouses-list sortable">
+        <tr>
+          <th>Title</th>
+          <th>Address</th>
+        </tr>
+        <% if current_user.warehouses.any? %>
+          <% current_user.warehouses.order(:title).each { |warehouse| %>
+            <tr>
+              <td>
+                <%= link_to warehouse.title, warehouse_path(warehouse) %>
+                <div class="record-actions on-parent-hover">
+                  <%= link_to '#', :title => 'Edit', 'data-popup-url' => edit_warehouse_path(warehouse) do %>
+                    <i class="fa fa-pencil"></i>
+                  <% end %>
+                  <%= link_to warehouse_path(warehouse),
+                              'data-confirm' => 'Are you sure?',
+                              :class => ('disabled' unless warehouse.can_delete?),
+                              :method => 'delete',
+                              :title => (!warehouse.can_delete? ? 'This warehouse stores some listings. Unassign them in order to delete' : 'Delete') do %>
+                    <i class="fa fa-trash"></i>
+                  <% end %>
+                </div>
+              </td>
+              <td class="text-center"><%= warehouse.address %></td>
+            </tr>
+          <% } %>
+        <% else %>
+          <tr>
+            <td colspan="8">
+              <center>No warehouses</center>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    </div>
+  </div>
+</div>

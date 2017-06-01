@@ -1,0 +1,92 @@
+<h2 class="text-left">
+  Sales Overview
+  <span class="sub">last 30 days</span>
+  <%= link_to 'View Report', admin_zone? ? :admin_sales_report : :sales_report, :class => 'float-right' %>
+</h2>
+
+<div class="dashboard-chart" id="sales-chart"></div>
+
+<%
+  orders_stats = recent_orders.group_by { |o|
+    o.create_timestamp.to_date
+  }
+%>
+
+<script>
+  $(function () {
+    new Highcharts.Chart({
+      chart: {
+        renderTo: 'sales-chart',
+        backgroundColor: 'transparent',
+        style: {
+          color: "#eee"
+        }
+      },
+      title: {text: null},
+      xAxis: {
+        type: 'linear',
+        categories: <%= orders_stats.map {|g, o| g.strftime("%B %d, %Y") }.to_json.html_safe %>,
+        labels: {
+          style: {
+            color: '#eee'
+          }
+        }
+      },
+      yAxis: [{
+        title: {
+          text: 'Revenue',
+          style: {
+            color: '#eee'
+          }
+        },
+        labels: {
+          format: "${value}",
+          style: {
+            color: '#eee'
+          }
+        },
+        gridLineColor: '#787d8e'
+      },
+        {
+          title: {
+            text: 'Count',
+            style: {
+              color: '#eee'
+            }
+          },
+          opposite: true,
+          labels: {
+            style: {
+              color: '#eee'
+            }
+          },
+          gridLineColor: '#787d8e'
+        }
+      ],
+      series: [{
+        type: 'area',
+        data: <%= orders_stats.map {|g, o| o.select(&:grand_total).map(&:grand_total).inject(&:+).to_f }.to_json.html_safe %>,
+        name: 'Revenue',
+        tooltip: {
+          valuePrefix: '$'
+        }
+      }, {
+        type: 'area',
+        data: <%= orders_stats.map {|g, o| o.map(&:net_profit).inject(&:+).to_f }.to_json.html_safe %>,
+        name: 'Net',
+        color: 'lightgreen',
+        tooltip: {
+          valuePrefix: '$'
+        }
+      }, {
+        data: <%= orders_stats.map {|g, o| o.length }.to_json.html_safe %>,
+        name: 'Count',
+        yAxis: 1,
+        color: 'orange'
+      }],
+      legend: {
+        itemStyle: {'color': '#eee'}
+      }
+    });
+  });
+</script>

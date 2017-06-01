@@ -1,0 +1,24 @@
+<% unless @filter[:ajax] %>
+  <% @page_title = "Inventory Items" %>
+  <% @body_classes << "" %>
+
+  <h1>
+    <%= @page_title %>
+  </h1>
+
+  <div class="light-container">
+    <form id="inventory-items-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= inventory_listings_path %>">
+      <%= hidden_field_tag 'filter[ajax]', true %>
+      Filters
+      <%= wrap_select select_tag 'filter[category]', categories_options_for_select(ItemCategory.top_level_categories, @filter[:category]), :prompt => 'All Categories' %>
+      <%= wrap_select select_tag 'filter[status]', options_for_select(InventoryItem::STATUSES, @filter[:status]), :prompt => 'Any Status' %>
+      <div class="float-right">
+        <%= text_field_tag 'filter[term]', @filter[:term], :placeholder => 'Search', :style => 'width: 170px' %>
+      </div>
+    </form>
+
+    <div id="filtered-content"></div>
+  </div>
+<% else %>
+  <%= render :partial => 'inventory_items', :locals => { :orders => @items } %>
+<% end %>

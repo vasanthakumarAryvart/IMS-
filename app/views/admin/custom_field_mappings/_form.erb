@@ -1,0 +1,57 @@
+<%= form_for [:admin, @category, @custom_field, @custom_field_mapping] do |f| %>
+  <%= f.hidden_field :marketplace_category_mapping_id %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :marketplace %>
+      <div class="field">
+        <%= text_field_tag 'marketplace_name', @custom_field_mapping.marketplace.name, :disabled => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :custom_field %>
+      <div class="field">
+        <%= text_field_tag 'custom_field', @custom_field.name, :disabled => true %>
+      </div>
+    </div>
+
+    <div class="row">
+      <%= f.label :marketplace_field %>
+      <div class="field marketplace-fields-list">
+        <div class="select-wrapper">
+          <select name="custom_field_mapping[marketplace_field]" required="required" class="marketplace-field-select">
+            <option value="">Choose Field</option>
+            <% @category_fields.each { |f| %>
+              <option value="<%= f[:name] %>"
+                      <%= 'selected' if f[:name] == @custom_field_mapping.marketplace_field %>
+                      data-config="<%= f.to_json %>"
+                      data-required="<%= '1' if f[:required] %>">
+                <%= f[:name] %>
+                <%= '[*]' if f[:required] %>
+              </option>
+            <% } %>
+          </select>
+          <%= f.hidden_field :marketplace_field_config, :value => @custom_field_mapping.marketplace_field_config.try(:to_json) %>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <%= f.label :required %>
+      <div class="field">
+        <%= f.check_box :required %>
+      </div>
+    </div>
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  $('.marketplace-field-select').change(function () {
+    var option = $(this).find('option[value=\'' + $(this).val() + '\']');
+    $('#custom_field_mapping_required')[0].checked = !!option.data('required');
+    $('#custom_field_mapping_marketplace_field_config').val(typeof(option.data('config')) == 'string' ? option.data('config') : JSON.stringify(option.data('config')));
+  })
+</script>

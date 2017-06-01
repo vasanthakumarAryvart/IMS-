@@ -1,0 +1,24 @@
+<% unless @filter[:ajax] %>
+  <% @page_title = "Orders" %>
+  <% @body_classes << "orders" %>
+
+  <h1>
+    <%= @page_title %>
+  </h1>
+
+  <div class="light-container">
+    <form id="orders-filter" class="filter" data-filter-content="filtered-content" data-filter-url="<%= admin_orders_path %>">
+      <%= hidden_field_tag 'filter[ajax]', true %>
+      Filters
+      <%= wrap_select select_tag 'filter[user]', options_for_select(User.order('id ASC').map {|u| [u.full_name_with_id, u.id] }, @filter[:user]), :prompt => 'All Users' %>
+      <%= wrap_select select_tag 'filter[marketplace]', options_for_select(Marketplace.all.map(&:name), @filter[:marketplace]), :prompt => 'Marketplace' %>
+      <%= wrap_select select_tag 'filter[status]', options_for_select(Order::STATUSES.map(&:capitalize), @filter[:status]), :prompt => 'Order Status' %>
+      <%= wrap_date_field text_field_tag 'filter[date_from]', @filter[:date_from], :placeholder => 'Date From', :class => 'date-field' %>
+      <%= wrap_date_field text_field_tag 'filter[date_to]', @filter[:date_to], :placeholder => 'Date To', :class => 'date-field' %>
+    </form>
+
+    <div id="filtered-content"></div>
+  </div>
+<% else %>
+  <%= render :partial => 'orders/orders', :locals => { :orders => @orders } %>
+<% end %>

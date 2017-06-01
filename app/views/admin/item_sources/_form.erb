@@ -1,0 +1,26 @@
+<%= form_for [:admin, @source] do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :name %>
+      <div class="field">
+        <%= f.text_field :name, :placeholder => 'Item Source Name', :required => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :short_name %>
+      <div class="field">
+        <%= f.text_field :short_name, :placeholder => 'Item Source Short Name' %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :profit_share_percent %>
+      <div class="field">
+        <%= f.number_field :profit_share_percent, :placeholder => '0', :required => true, :min => 0 %>%
+      </div>
+    </div>
+    <div class="row actions">
+      <%= f.submit 'Save', :class => 'btn btn-primary' %>
+      <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+    </div>
+  </div>
+<% end %>

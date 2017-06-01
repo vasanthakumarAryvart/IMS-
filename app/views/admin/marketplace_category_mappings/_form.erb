@@ -1,0 +1,92 @@
+<%= form_for [:admin, @category, @marketplace_category_mapping] do |f| %>
+  <div class="input-form">
+    <div class="row">
+      <%= f.label :marketplace %>
+      <div class="field">
+        <%= f.hidden_field :marketplace_id %>
+        <%= text_field_tag 'marketplace_name', @marketplace_category_mapping.marketplace.name, :disabled => true %>
+      </div>
+    </div>
+    <div class="row">
+      <%= f.label :item_category %>
+      <div class="field">
+        <%= f.hidden_field :item_category_id %>
+        <%= text_field_tag 'item_category', @marketplace_category_mapping.item_category.title, :disabled => true %>
+      </div>
+    </div>
+
+    <div class="row">
+      <%= f.label :category_uid, 'Marketplace Category' %>
+      <div class="field">
+        <div class="marketplace-category-chain" style="min-height: 20px;">
+          <% unless @marketplace_category_mapping.marketplace_category.blank? %>
+            <div style="padding: 8px 0px;">
+              <%= @marketplace_category_mapping.marketplace_category_name %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="row actions">
+      <% if @marketplace_category_mapping.new_record? %>
+        <%= f.submit 'Save', :class => 'btn btn-primary' %>
+        <%= link_to 'Cancel', '#', :class => 'btn popup-close' %>
+      <% else %>
+        <%= link_to 'Delete', admin_item_category_marketplace_category_mapping_path(@category, @marketplace_category_mapping),
+                    'data-confirm' => "This will reset all custom field mappings for #{@marketplace_category_mapping.marketplace.name}. Are you sure?", :method => 'delete', :title => 'Remove Mapping', :class => 'btn btn-primary' %>
+        <%= link_to 'Close', '#', :class => 'btn popup-close' %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  function load_mapping_subcategories(category_id, current_category) {
+    $('.marketplace-category-chain .loading').remove();
+    $('.marketplace-category-chain').append('<div style="padding: 8px 0px;" class="loading">Loading...</div>');
+
+    $.get('<%= marketplace_subcategories_admin_item_category_marketplace_category_mappings_path(@category, @marketplace_category_mapping.marketplace) %>', {category_id: category_id}).success(function (categories) {
+      if (!category_id)
+        $('.marketplace-category-chain').html('');
+      $('.marketplace-category-chain .loading').remove();
+      if (categories.length > 0)
+        $('.marketplace-category-chain').append(Handlebars.compile($('#marketplace-categories-list-template').html())({
+          categories: categories,
+          current_category: current_category
+        }));
+    }).fail(function () {
+      $('.marketplace-category-chain .loading').remove();
+      $('.marketplace-category-chain').append('<div style="padding: 8px 0px;" class="loading">Error loading categories</div>');
+    });
+  }
+
+  $('.change-category-mapping').click(function () {
+    load_mapping_subcategories();
+  });
+
+  $('.marketplace-category-chain').on('change', 'select', function () {
+    $(this).parent().nextAll('.select-wrapper').remove();
+    load_mapping_subcategories($(this).val());
+    $('.marketplace-category-chain').append("<input name='marketplace_category_mapping[marketplace_category_name]' type='hidden' value=\"" + $(this).find('option[value=' + $(this).val() + ']').text() + "\"/>")
+  });
+
+  <% if @marketplace_category_mapping.marketplace_category.blank? %>
+  load_mapping_subcategories();
+  <% end %>
+</script>
+
+<script type="text/x-handlebars-template" id="marketplace-categories-list-template">
+  {{#if categories}}
+  <div class="select-wrapper" style="margin-bottom: 5px;">
+    <select name="marketplace_category_mapping[marketplace_category]">
+      {{#unless current_category}}
+      <option selected="selected" value="">Choose category...</option>
+      {{/unless}}
+      {{#each categories}}
+      <option value="{{id}}" {{#equal id ../current_category}} selected="selected" {{/equal}}>{{name}}</option>
+      {{/each}}
+    </select>
+  </div>
+  {{/if}}
+</script>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="member-view">
+<head>
+  <title><%= [@page_title, 'Clarabyte'].reject(&:blank?).join(' - ') %></title>
+  <link rel="icon" href="/favicon.png">
+  <%= stylesheet_link_tag 'application', media: 'all' %>
+  <%= javascript_include_tag 'application' %>
+  <%= csrf_meta_tags %>
+</head>
+<body class="<%= @body_classes.join(' ') %>">
+
+<%= render :partial => "layouts/#{@top_menu}_top_menu" %>
+
+<div class="wide-limit">
+  <%= yield %>
+</div>
+
+<%= render :partial => 'layouts/flash' %>
+
+</body>
+</html>

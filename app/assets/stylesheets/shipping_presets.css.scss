@@ -1,0 +1,14 @@
+// Place all the styles related to the shipping_presets controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.shipping-view {
+  .shipping-presets-pane {
+    width: 49%;
+    float: left;
+  }
+  .warehouses-pane {
+    width: 49%;
+    float: right;
+  }
+}

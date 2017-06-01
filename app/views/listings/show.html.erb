@@ -1,0 +1,164 @@
+<% @page_title = @listing.title %>
+<% @body_classes << "listings" %>
+
+<h1>
+  <%= back_btn(listings_path) %>
+  <%= @page_title %>
+  <% if @listing.editable? %>
+    <% if @listing.archived? %>
+      <%= link_to 'Unarchive', unarchive_listing_path(@listing), :class => 'btn btn-primary float-right' %>
+      <%= link_to 'Delete', listing_path(@listing), :method => :delete, :class => 'btn btn-primary red float-right', 'data-confirm' => 'Are you sure?' if @listing.can_delete? %>
+    <% else %>
+      <%= link_to 'Edit', edit_listing_path(@listing), :class => 'btn btn-primary float-right' %>
+      <%= link_to "#{@listing.can_delete? ? 'Delete' : (@listing.published? ? 'Unpublish & Archive' : 'Archive')}", listing_path(@listing), :method => :delete, :class => 'btn btn-primary red float-right', 'data-confirm' => 'Are you sure?' %>
+    <% end %>
+  <% else %>
+    <div class="float-right" style="font-size: 16px; margin-top: 15px;">
+      <% if @listing.processing? %>
+        Processing &nbsp;<i class='fa fa-refresh infinite-spin'></i>
+      <% else %>
+        Actions Pending
+        <%= link_to 'Cancel', cancel_pending_listing_path(@listing), :class => 'btn btn-primary btn-small' %>
+      <% end %>
+    </div>
+  <% end %>
+</h1>
+
+<div class="listing-view">
+  <div class="left-column">
+    <div class="listing-images">
+      <div class="current-image"><%= image_tag @listing.images.first.try(:image, :preview) %></div>
+      <div class="images-list">
+        <% @listing.images.each { |image| %>
+          <div class="image" style="background-image: url(<%= image.image(:preview) %>);" data-url="<%= image.image(:preview) %>"></div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="listing-pricing">
+      <% @listing.account_listings.publishable.each { |account_listing| %>
+        <div class="price" title="Price updated at: <%= account_listing.price_updated_at || 'never' %>" style="padding-top: <%= account_listing.discount? ? 0 : 20 %>px;">
+          <div class="number <%= 'regular' if account_listing.discount? %>">&nbsp;<%= account_listing.price ? number_to_currency(account_listing.price) : "<i class='fa fa-refresh infinite-spin'></i>".html_safe %>&nbsp;</div>
+          <% if account_listing.discount? %>
+            <div class="number"><%= number_to_currency account_listing.discount_price %></div>
+          <% end %>
+
+          <div>
+            <% if account_listing.url %>
+              <%= link_to image_tag(account_listing.account.marketplace.icon_url), account_listing.url, :target => '_blank' %>
+            <% else %>
+              <%= image_tag(account_listing.account.marketplace.icon_url) %>
+            <% end %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="status-details">
+      <div>Created At <span class="white float-right"><%= l @listing.created_at, :format => :long %></span></div>
+      <div>Updated At <span class="white float-right"><%= l @listing.updated_at, :format => :long %></span></div>
+      <br/>
+      <div class="light-container">
+        <% @listing.account_listings.each { |account_listing| %>
+          <div style="padding-left: 0px;" class="<%= account_listing.processing_error? ? 'red' : (account_listing.pending? || account_listing.processing? ? 'green' : (account_listing.inactive? ? 'grey' : 'white')) %>">
+            <%= account_listing.account.marketplace.name %>
+            <div class="float-right text-right">
+              <%= "<i class='fa fa-refresh infinite-spin'></i>&nbsp;".html_safe if account_listing.processing? %>
+              <%= account_listing.status.humanize.split(' ').map(&:capitalize).join(' ') %><%= "..." if account_listing.processing? %>
+              <% if account_listing.processing_error? %>
+                <span title="<%= account_listing.messages[:errors].join("\n") %>"><i class="fa fa-info-circle"></i></span>
+              <% end %>
+
+              <% if account_listing.publishable? %>
+                <% if account_listing.custom_pricing? %>
+                  <div style="font-size: 12px;">
+                    <% if account_listing.error_in_pricing_formula %>
+                      <div class="red" title="Error message: <%= account_listing.error_in_pricing_formula.capitalize %> (last updated <%= account_listing.price_updated_at || 'never' %>)">
+                        Error in pricing formula <i class="fa fa-info-circle"></i>
+                      </div>
+                    <% else %>
+                      <div style="opacity: 0.7" class="<%= (account_listing.price_updated_at || DateTime.new(1)) < 2.hours.ago ? 'orange' : 'green' %>">
+                        Price Updated:
+                        <% if (account_listing.price_updated_at || DateTime.new(1)) > 12.hours.ago %>
+                        <span title="<%= l(account_listing.price_updated_at, :format => :long) %>">
+                          <%= distance_of_time_in_words_to_now account_listing.price_updated_at %> ago
+                        </span>
+                        <% else %>
+                          <%= account_listing.price_updated_at ? l(account_listing.price_updated_at, :format => :long) : 'never' %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% elsif account_listing.price.blank? %>
+                  <div style="font-size: 12px; opacity: 0.7" class="red" title="Please define pricing for this marketplace">
+                    Pricing not set up <i class="fa fa-info-circle"></i>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <%= render :partial => 'inventory_item', :locals => { :item => @listing.inventory_item } if @listing.inventory_item %>
+  </div>
+
+  <div class="right-column">
+    <h3 class="white" style="margin-top: 0px;">Listing Description</h3>
+
+    <p>
+      <%= simple_format @listing.description %>
+    </p>
+
+    <h3 class="white">Listing Details</h3>
+
+    <div class="light-container">
+      <div class="listing-details">
+        <div class="white">Storage and Quantity</div>
+        <% @listing.warehouse_placements.each { |p| %>
+          <div class="field">
+            <span>
+              <%= p.warehouse.title %>, pin <%= p.warehouse_pin.title %>
+            </span>
+
+            <div class="value">
+              <%= p.quantity %>
+            </div>
+          </div>
+        <% } %>
+        <br/>
+        <% @listing.data_fields.group_by(&:marketplace).each { |marketplace, fields| %>
+          <div class="white">
+            <%= marketplace.try(:name) || "Generic Fields" %>
+          </div>
+          <% fields.each { |field| %>
+            <% next if field.custom_field.title_field? %>
+            <% next if field.custom_field.description_field? %>
+            <div class="field">
+              <span><%= field.custom_field.name %></span>
+
+              <div class="value">
+                <%= field.value.is_a?(Array) ? field.value.join(', ') : field.value %>
+              </div>
+
+              <div class="clearfix"></div>
+            </div>
+          <% } %>
+          <br/>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="clearfix"></div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    $('.listing-images .images-list .image').click(function () {
+      $('.listing-images .current-image img').attr('src', $(this).data('url'));
+    });
+  });
+</script>

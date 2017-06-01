@@ -1,0 +1,9 @@
+<% @page_title = "Edit Listing" %>
+<% @body_classes << "listings new-listing" %>
+
+<h1>
+  <%= back_btn(listings_path) %>
+  <%= @page_title %>
+</h1>
+
+<%= render :partial => 'form', :locals => { listing: @listing } %>

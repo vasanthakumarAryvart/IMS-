@@ -1,0 +1,77 @@
+<div id="sold-listings-chart" class="generic-chart"></div>
+
+<table class="strip-table centered-table sortable">
+  <thead>
+  <tr>
+    <th>Listing</th>
+    <th>Orders Count</th>
+    <th>Revenue $</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% groups.each { |group| %>
+    <tr>
+      <td><%= group[:listing] ? link_to(group[:listing].title, listing_path(group[:listing])) : group[:item_title] %></td>
+      <td><%= group[:count] %></td>
+      <td><%= number_to_currency group[:revenue] %></td>
+    </tr>
+  <% } %>
+  </tbody>
+  <tfoot>
+  <tr>
+    <td>TOTAL</td>
+    <td><%= total_count = groups.map { |g| g[:count] }.inject(&:+) || 0 %></td>
+    <td><%= number_to_currency groups.map { |g| g[:revenue] }.inject(&:+) || 0 %></td>
+  </tr>
+  </tfoot>
+</table>
+
+<% if total_count && total_count > 0 %>
+  <% chart_groups = groups[0..29] %>
+  <% other_count = (groups[30..-1] || []).map { |g| g[:count] }.inject(&:+) || 0 %>
+  <% chart_groups << { :item_title => 'Other', :count => other_count } if other_count > 0 %>
+
+  <script>
+    $(function () {
+      new Highcharts.Chart({
+        chart: {
+          renderTo: 'sold-listings-chart',
+          backgroundColor: 'transparent',
+          plotBackgroundColor: null,
+          plotBorderWidth: null,
+          plotShadow: false,
+          type: 'pie'
+        },
+        title: {text: null},
+        tooltip: {
+          pointFormat: '{series.name}: <b>{point.y}</b>'
+        },
+        plotOptions: {
+          pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+              enabled: true,
+              format: '<b>{point.name}</b>', // : {y}
+              style: {
+                color: '#eee',
+                textShadow: 'none'
+              }
+            }
+          }
+        },
+        series: [{
+          name: 'Count',
+          colorByPoint: true,
+          data: <%= chart_groups.map {|g| {
+            name: g[:item_title],
+            y: g[:count]
+          } }.to_json.html_safe %>
+        }],
+        legend: {
+          itemStyle: {'color': '#eee'}
+        }
+      });
+    });
+  </script>
+<% end %>
